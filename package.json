@@ -1,0 +1,40 @@
+{
+  "name": "kargotrac-backend",
+  "version": "1.0.0",
+  "description": "Backend del sistema Kargotrack",
+  "main": "server.js",
+  "scripts": {
+    "start": "npm run init-db && ./node_modules/nodemon/bin/nodemon.js server.js",
+    "sequelize-skeleton": "./node_modules/sequelize-cli/lib/sequelize init:models; ./node_modules/sequelize-cli/lib/sequelize init:config",
+    "init-db": "cd /usr/bin && echo 'DROP DATABASE IF EXISTS kargotrack_db; CREATE DATABASE kargotrack_db CHARACTER SET utf8 COLLATE utf8_general_ci' | ./mysql -u root -p && cd -",
+    "init-server": "./node_modules/nodemon/bin/nodemon.js server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/danielrvt/kargotrac-backend.git"
+  },
+  "author": "Maria Grimaldi",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/danielrvt/kargotrac-backend/issues"
+  },
+  "homepage": "https://github.com/danielrvt/kargotrac-backend#readme",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "body-parser": "^1.19.0",
+    "concurrently": "^4.1.1",
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "express-validator": "^6.1.1",
+    "is-empty": "^1.2.0",
+    "jsonwebtoken": "^8.5.1",
+    "mysql2": "^1.6.5",
+    "sequelize": "^5.10.1",
+    "sequelize-auto-migrations": "^1.0.3",
+    "sequelize-cli": "^5.5.0",
+    "validator": "^11.1.0"
+  },
+  "devDependencies": {
+    "nodemon": "^1.19.1"
+  }
+}
