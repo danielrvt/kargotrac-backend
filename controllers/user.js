@@ -1,8 +1,7 @@
 
-var User = require('../models/user')
 const { check, validationResult } = require('express-validator');
 const db = require('../models/index.js')
-
+const User = require('../models').Users;
 
 exports.validate = (method) => {
     switch (method) {
@@ -15,6 +14,25 @@ exports.validate = (method) => {
     }
 }
 
+const isUnique = (email,username) => {
+    User.findAll({
+        where: {
+            email: email,
+            username: username
+        }
+    }).done(function(error, user) {
+
+        if (error)
+            return console.log(error);
+
+        if (user)
+            // We found a user with this email address.
+            // Pass the error to the next method.
+            return res.json("El email o user no son unicos");
+        next();
+
+    });
+}
 
 exports.createUser = async (req, res, next) => {
     try {
@@ -23,22 +41,19 @@ exports.createUser = async (req, res, next) => {
             res.status(422).json({ errors: errors.array() });
             return;
         }
+        const { email, username, password } = req.body
 
-        const { firstName, lastName, email, password } = req.body
-        if (!isEmailUnique(email)) {
-            res.send("El email no es unico")
-            return;
-        }
+        isUnique(email,username)
+
         const user = await User.create({
-
-            firstName,
-
-            lastName,
 
             email,
 
+            username,
+
             password
         })
+        // Debo agregar a userscompany el id que traiga
         res.json(user)
     } catch (err) {
         return next(err)
