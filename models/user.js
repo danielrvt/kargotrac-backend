@@ -1,17 +1,29 @@
-const Sequelize = require('sequelize')
-const db = require('./index.js')
-
-module.exports = db.sequelize.define('User', {
-    firstName: Sequelize.STRING,
-    lastName: Sequelize.STRING,
+'use strict';
+module.exports = (sequelize, DataTypes) => {
+  const User = sequelize.define('Users', {
     email: {
-      type: Sequelize.STRING,
+      type: DataTypes.STRING,
       allowNull: false,
-      unique: true
-    },
+      unique: true},
+
+    username: {
+      type: DataTypes.STRING,
+      unique: true},
+
     password: {
-      type: Sequelize.STRING,
-      allowNull: false
-    }
-  }, {freezeTableName: true})
-  
+      type: DataTypes.STRING,
+      allowNull: false},
+
+    address: DataTypes.STRING,
+    phone1: DataTypes.STRING,
+    phone2: DataTypes.STRING
+  }, {});
+  User.associate = function(models) {
+    User.belongsToMany(models.Companies, {
+      through: 'usersCompanies',
+      as: 'Companies',
+      foreignKey: 'userID'
+    });
+  };
+  return User;
+};
