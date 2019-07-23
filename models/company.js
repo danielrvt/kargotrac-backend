@@ -1,9 +1,19 @@
 'use strict';
 module.exports = (sequelize, DataTypes) => {
-  const company = sequelize.define('company', {
-    email: DataTypes.STRING,
-    username: DataTypes.STRING,
-    password: DataTypes.STRING,
+  const Companies = sequelize.define('Companies', {
+    email: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: true
+    }, username: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: true
+    },
+    password: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
     address: DataTypes.STRING,
     phone1: DataTypes.STRING,
     logo: DataTypes.STRING,
@@ -13,8 +23,12 @@ module.exports = (sequelize, DataTypes) => {
     maritime_cubic_feet_price: DataTypes.DOUBLE,
     air_pound_price: DataTypes.DOUBLE
   }, {});
-  company.associate = function(models) {
-    // associations can be defined here
+  Companies.associate = function (models) {
+    Companies.belongsToMany(models.Users, {
+      through: 'usersCompanies',
+      as: 'Users',
+      foreignKey: 'companyID'
+    });
   };
-  return company;
+  return Companies;
 };
