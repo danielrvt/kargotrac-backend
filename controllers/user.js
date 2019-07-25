@@ -1,10 +1,14 @@
 
 const { check, validationResult } = require('express-validator');
-const db = require('../models/index.js')
 const User = require('../models').Users;
 const usersCompany = require('../models').usersCompanies;
 const usersCompanyCont = require('./userscompany')
+const jwt = require('jsonwebtoken');
+const exjwt = require('express-jwt');
 
+const jwtMW = exjwt({
+    secret: 'whatever it takes'
+});
 /*
 DESCRIPTION: validates email and password (does not check if email exists)
  */
@@ -116,21 +120,19 @@ const createNewUser = async (email, username, password, companyID, response) => 
 
 exports.loginUser = (req, res) => {
 
-    // Aqui acepto user, contrasena  y company. Debo chequear que exista el email con la contrasena y ademas tenga
-    // asociada la empresa. usando if exist tengo el userid y contrasena. luego puedo buscar en usersCompany y con
-    // eso tengo si tiene la empresa asociada. Si no la tiene envio => no tiene la emrpesa asociada
-    // Si todo sale bien, debo mandar user, empresa de envio y token de sesion
     const { email, password, companyID } = req.body
 
     checkIfExist(email).then((result) => {
-        console.log('ESTOY EN LOGIN')
+
         const exist = result.exist
         const user = result.user
         if (exist) {
             (user.dataValues.password === password ?
                 (checkIfCompMatch(user.dataValues.id, companyID).then((result) => {
                     const companyExist = result.exist
-                    if (companyExist) res.json(user.dataValues)
+                    if (companyExist) {
+                        let token = jwt.sign({ id: user.id, username: user.username }, 'whatever it takes', { expiresIn: 129600 }); // Sigining the token
+                        res.json({usuario: user.dataValues, company: companyID, token: token})}
                     else res.json('El usuario no tiene asociada esa compania')
                 })) :
                 res.json('El password no coincide'))
