@@ -17,6 +17,10 @@ router.post(
     companyController.createCompany
 )
 
+router.post(
+    '/users',
+    userController.loginUser
+)
 
 module.exports = router
 
