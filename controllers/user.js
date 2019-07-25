@@ -2,6 +2,7 @@
 const { check, validationResult } = require('express-validator');
 const db = require('../models/index.js')
 const User = require('../models').Users;
+const usersCompany = require('../models').usersCompanies;
 const usersCompanyCont = require('./userscompany')
 
 /*
@@ -38,9 +39,9 @@ exports.createUser = (req, res) => {
             console.log('ESTE ES EXIST DIOS MIO')
             const exist = result.exist
             const user = result.user
-            console.log(user.dataValues)
             if (exist) {
-                (user.dataValues.password === password ? usersCompanyCont.createUsersCompany(user[0].id, companyID, res) :
+
+                (user.dataValues.password === password ? usersCompanyCont.createUsersCompany(user.dataValues.id, companyID, res) :
                     res.json('El password no coincide'))
             } else {
                 createNewUser(email, username, password, companyID, res)
@@ -90,7 +91,6 @@ const checkIfExist = (email) => {
 }
 
 
-
 /* Esta funcion agrega el nuevo usuario en la bd */
 const createNewUser = async (email, username, password, companyID, response) => {
     try {
@@ -114,3 +114,45 @@ const createNewUser = async (email, username, password, companyID, response) => 
 
 /****************************** USER LOGIN ****************************/
 
+exports.loginUser = (req, res) => {
+
+    // Aqui acepto user, contrasena  y company. Debo chequear que exista el email con la contrasena y ademas tenga
+    // asociada la empresa. usando if exist tengo el userid y contrasena. luego puedo buscar en usersCompany y con
+    // eso tengo si tiene la empresa asociada. Si no la tiene envio => no tiene la emrpesa asociada
+    // Si todo sale bien, debo mandar user, empresa de envio y token de sesion
+    const { email, password, companyID } = req.body
+
+    checkIfExist(email).then((result) => {
+        console.log('ESTOY EN LOGIN')
+        const exist = result.exist
+        const user = result.user
+        if (exist) {
+            (user.dataValues.password === password ?
+                (checkIfCompMatch(user.dataValues.id, companyID).then((result) => {
+                    const companyExist = result.exist
+                    if (companyExist) res.json(user.dataValues)
+                    else res.json('El usuario no tiene asociada esa compania')
+                })) :
+                res.json('El password no coincide'))
+        } else {
+            res.json('El usuario no existe')
+        }
+    })
+
+}
+
+const checkIfCompMatch = (userID, companyID) => {
+
+    return (usersCompany.findAll({
+        where: {
+            userID: userID,
+            companyID: companyID
+        }
+    })).then(function (user) {
+
+        if (user.length > 0)
+            return { exist: true }
+        else return { exist: false }
+    })
+
+}
