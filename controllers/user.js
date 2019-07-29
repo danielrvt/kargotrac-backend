@@ -39,25 +39,40 @@ exports.createUser = (req, res) => {
             return;
         }
         const { email, username, password, companyID } = req.body
-        console.log(req.body)
-        checkIfExist(email).then((result) => {
-            const exist = result.exist
-            const user = result.user
-            if (exist) {
+        // Chequeo si la compania existe
+        ckeckIfCompExist(companyID).then((exist) => {
 
-                (user.dataValues.password === password ? (() => {
-                    // Debo chequear que la compania exista
-                    console.log(companyID)
-                    usersCompanyCont.createUsersCompany(user.dataValues.id, companyID, res)
-                    let token = jwt.sign({ id: user.id, username: user.username }, 'whatever it takes', { expiresIn: 129600 }); // Sigining the token
-                    res.json({ user: user.dataValues, company: companyID, token: token })
-                }
-                ) :
-                    res.json('El password no coincide'))
+            if (exist) {
+                checkIfExist(email).then((result) => {
+
+                    const exist = result.exist
+                    const user = result.user
+                    console.log(user)
+                    if (exist) {
+
+                        if (user.dataValues.password === password) {
+                            // Debo chequear que la compania exista
+                            usersCompanyCont.createUsersCompany(user.dataValues.id, companyID).then((resp) => {
+                                console.log("Esta es la resssspppp")
+                                console.log(resp)
+                            })
+
+                            let token = jwt.sign({ id: user.id, email: user.email }, 'whatever it takes', { expiresIn: 129600 }); // Sigining the token
+                            res.json({ user: user.dataValues, company: companyID, token: token })
+                        }
+
+                        else res.json('El password no coincide')
+                    }
+                    else {
+                        createNewUser(email, username, password, companyID, res)
+                    }
+                })
+
             } else {
-                createNewUser(email, username, password, companyID, res)
+                res.json('La compania no existe')
             }
         })
+
 
 
     } catch (err) {
@@ -113,8 +128,8 @@ const createNewUser = async (email, username, password, companyID, response) => 
 
             password
         })
-        usersCompanyCont.createUsersCompany(user.id, companyID, response)
-        let token = jwt.sign({ id: user.dataValues.id, username: user.dataValues.username }, 'whatever it takes', { expiresIn: 129600 }); // Sigining the token
+        usersCompanyCont.createUsersCompany(user.id, companyID)
+        let token = jwt.sign({ id: user.dataValues.id, email: user.dataValues.email }, 'whatever it takes', { expiresIn: 129600 }); // Sigining the token
         response.json({
             user: user,
             company: companyID,
@@ -128,25 +143,35 @@ const createNewUser = async (email, username, password, companyID, response) => 
 
 /****************************** USER LOGIN ****************************/
 
-// Por ahora no necesito compania para inciiar sesion
+// Por ahora, dejo iniciar sesion asi no tenga compania --> no se que oasa que no carga si le paso el id de la compania
 
 exports.login = (req, res) => {
 
     try {
 
         const { email, password, companyID } = req.body
-        console.log('ENTRE')
         checkIfExist(email).then((result) => {
             const exist = result.exist
             const user = result.user
-            
+
             if (exist) {
 
-                if(user.dataValues.password === password)
-                {
+                if (user.dataValues.password === password) {
 
-                    let token = jwt.sign({ id: user.dataValues.id, username: user.dataValues.username }, 'whatever it takes', { expiresIn: 129600 }); // Sigining the token
-                    res.json({ user: user.dataValues, companyID: null ,token: token })
+                    if (companyID) {
+                        checkIfCompMatch(user.dataValues.id, companyID).then((match) => {
+
+                            if (match) {
+                                let token = jwt.sign({ id: user.dataValues.id, username: user.dataValues.username }, 'whatever it takes', { expiresIn: 129600 }); // Sigining the token
+                                res.json({ user: user.dataValues, companyID: null, token: token })
+                            } else res.json('No tiene asociada esa compania')
+                        })
+                    } else {
+                        let token = jwt.sign({ id: user.dataValues.id, username: user.dataValues.username }, 'whatever it takes', { expiresIn: 129600 }); // Sigining the token
+                        res.json({ user: user.dataValues, companyID: null, token: token })
+                    }
+
+
                 }
                 else res.json('El password no coincide')
             } else {
@@ -171,8 +196,8 @@ const checkIfCompMatch = (userID, companyID) => {
     })).then(function (user) {
 
         if (user.length > 0)
-            return { exist: true }
-        else return { exist: false }
+            return true
+        else return false
     })
 
 }
@@ -185,8 +210,8 @@ const ckeckIfCompExist = (companyID) => {
     })).then(function (company) {
 
         if (company.length > 0)
-            return { exist: true }
-        else return { exist: false }
+            return true
+        else return false
     })
 
 }

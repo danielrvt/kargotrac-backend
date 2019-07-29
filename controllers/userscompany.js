@@ -23,35 +23,32 @@ const searchUserID = (userID, companyID) => {
 }
 
 /*Esta funcion crea la nueva tupla y la inserta en la bd */
-const createNewUserCompany = async (userID, companyID, res) => {
+const createNewUserCompany = async (userID, companyID) => {
     try {
         console.log("Estoy en crear uusario")
         const user = await UsersCompany.create({
             userID,
             companyID
         })
-        res.json(user)
     } catch (e) {
         console.log(e);
     }
 }
 
 /*Esta funcion es el controlador de llamadas para hacer el proceso de agregar un nuevo usersCompany */
-exports.createUsersCompany = async (userID, companyID, res) => {
-    try {
-        searchUserID(userID, companyID).then((existCompany)=>{
+exports.createUsersCompany = (userID, companyID) => {
+
+        return (searchUserID(userID, companyID).then((existCompany)=>{
             if(existCompany){
-                res.json('Ya la comania esta asociada al usuario')
+                return 'Ya la compania esta asoc al usuario'
             }else{
-                createNewUserCompany(userID, companyID,res)
+                createNewUserCompany(userID, companyID)
+                return 'Nueva compania asociada'
             }
 
-        })
+        }))
 
         
 
-    } catch (err) {
-
-        return console.log("Error")
-    }
+    
 }
