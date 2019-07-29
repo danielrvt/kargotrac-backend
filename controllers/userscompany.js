@@ -30,8 +30,6 @@ const createNewUserCompany = async (userID, companyID, res) => {
             userID,
             companyID
         })
-        console.log("hola aqui el usuario")
-        console.log(user)
         res.json(user)
     } catch (e) {
         console.log(e);

@@ -1,6 +1,7 @@
 
 const { check, validationResult } = require('express-validator');
 const User = require('../models').Users;
+const Company = require('../models').Companies;
 const usersCompany = require('../models').usersCompanies;
 const usersCompanyCont = require('./userscompany')
 const jwt = require('jsonwebtoken');
@@ -38,14 +39,20 @@ exports.createUser = (req, res) => {
             return;
         }
         const { email, username, password, companyID } = req.body
-
+        console.log(req.body)
         checkIfExist(email).then((result) => {
-            console.log('ESTE ES EXIST DIOS MIO')
             const exist = result.exist
             const user = result.user
             if (exist) {
 
-                (user.dataValues.password === password ? usersCompanyCont.createUsersCompany(user.dataValues.id, companyID, res) :
+                (user.dataValues.password === password ? (() => {
+                    // Debo chequear que la compania exista
+                    console.log(companyID)
+                    usersCompanyCont.createUsersCompany(user.dataValues.id, companyID, res)
+                    let token = jwt.sign({ id: user.id, username: user.username }, 'whatever it takes', { expiresIn: 129600 }); // Sigining the token
+                    res.json({ user: user.dataValues, company: companyID, token: token })
+                }
+                ) :
                     res.json('El password no coincide'))
             } else {
                 createNewUser(email, username, password, companyID, res)
@@ -106,10 +113,13 @@ const createNewUser = async (email, username, password, companyID, response) => 
 
             password
         })
-
         usersCompanyCont.createUsersCompany(user.id, companyID, response)
-
-        response.json(user)
+        let token = jwt.sign({ id: user.dataValues.id, username: user.dataValues.username }, 'whatever it takes', { expiresIn: 129600 }); // Sigining the token
+        response.json({
+            user: user,
+            company: companyID,
+            token: token
+        })
     } catch (e) {
         console.log(e)
         console.log('Error caught');
@@ -118,31 +128,39 @@ const createNewUser = async (email, username, password, companyID, response) => 
 
 /****************************** USER LOGIN ****************************/
 
-exports.loginUser = (req, res) => {
+// Por ahora no necesito compania para inciiar sesion
 
-    const { email, password, companyID } = req.body
+exports.login = (req, res) => {
 
-    checkIfExist(email).then((result) => {
+    try {
 
-        const exist = result.exist
-        const user = result.user
-        if (exist) {
-            (user.dataValues.password === password ?
-                (checkIfCompMatch(user.dataValues.id, companyID).then((result) => {
-                    const companyExist = result.exist
-                    if (companyExist) {
-                        let token = jwt.sign({ id: user.id, username: user.username }, 'whatever it takes', { expiresIn: 129600 }); // Sigining the token
-                        res.json({usuario: user.dataValues, company: companyID, token: token})}
-                    else res.json('El usuario no tiene asociada esa compania')
-                })) :
-                res.json('El password no coincide'))
-        } else {
-            res.json('El usuario no existe')
-        }
-    })
+        const { email, password, companyID } = req.body
+        console.log('ENTRE')
+        checkIfExist(email).then((result) => {
+            const exist = result.exist
+            const user = result.user
+            
+            if (exist) {
 
+                if(user.dataValues.password === password)
+                {
+
+                    let token = jwt.sign({ id: user.dataValues.id, username: user.dataValues.username }, 'whatever it takes', { expiresIn: 129600 }); // Sigining the token
+                    res.json({ user: user.dataValues, companyID: null ,token: token })
+                }
+                else res.json('El password no coincide')
+            } else {
+                res.json('El usuario no existe')
+            }
+        })
+
+
+    } catch (err) {
+        return console.log(err)
+    }
 }
 
+// Para cuando le pase la compania por login ==> debo chequear si tiene la compania asociada
 const checkIfCompMatch = (userID, companyID) => {
 
     return (usersCompany.findAll({
@@ -153,6 +171,20 @@ const checkIfCompMatch = (userID, companyID) => {
     })).then(function (user) {
 
         if (user.length > 0)
+            return { exist: true }
+        else return { exist: false }
+    })
+
+}
+
+const ckeckIfCompExist = (companyID) => {
+    return (Company.findAll({
+        where: {
+            id: companyID
+        }
+    })).then(function (company) {
+
+        if (company.length > 0)
             return { exist: true }
         else return { exist: false }
     })
