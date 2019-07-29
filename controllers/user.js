@@ -58,10 +58,10 @@ exports.createUser = (req, res) => {
                             })
 
                             let token = jwt.sign({ id: user.id, email: user.email }, 'whatever it takes', { expiresIn: 129600 }); // Sigining the token
-                            res.json({ status: 'success' , user: user.dataValues, company: companyID, token: token })
+                            res.json({ status: 'success', user: user.dataValues, company: companyID, token: token })
                         }
 
-                        else res.json({status:'failed', msg:'El password no coincide'})
+                        else res.json({ status: 'failed', msg: 'Wrong password' })
                     }
                     else {
                         createNewUser(email, username, password, companyID, res)
@@ -69,7 +69,7 @@ exports.createUser = (req, res) => {
                 })
 
             } else {
-                res.json({status:'failed', msg: 'La compania no existe'})
+                res.json({ status: 'failed', msg: 'Company does not exist' })
             }
         })
 
@@ -151,33 +151,41 @@ exports.login = (req, res) => {
     try {
 
         const { email, password, companyID } = req.body
-        checkIfExist(email).then((result) => {
-            const exist = result.exist
-            const user = result.user
 
-            if (exist) {
+        ckeckIfCompExist(companyID).then((companyExist) => {
+            if (companyExist) {
+                checkIfExist(email).then((result) => {
+                    const exist = result.exist
+                    const user = result.user
 
-                if (user.dataValues.password === password) {
+                    if (exist) {
 
-                    if (companyID) {
-                        checkIfCompMatch(user.dataValues.id, companyID).then((match) => {
+                        if (user.dataValues.password === password) {
 
-                            if (match) {
+                            if (companyID) {
+                                checkIfCompMatch(user.dataValues.id, companyID).then((match) => {
+
+                                    if (match) {
+                                        let token = jwt.sign({ id: user.dataValues.id, username: user.dataValues.username }, 'whatever it takes', { expiresIn: 129600 }); // Sigining the token
+                                        res.json({ user: user.dataValues, companyID: null, token: token })
+                                    } else res.json({ status: 'failed', msg: 'User is not associated to that company' })
+                                })
+                            } else {
                                 let token = jwt.sign({ id: user.dataValues.id, username: user.dataValues.username }, 'whatever it takes', { expiresIn: 129600 }); // Sigining the token
-                                res.json({ user: user.dataValues, companyID: null, token: token })
-                            } else res.json({status: 'failed', msg : 'No tiene asociada esa compania'})
-                        })
+                                res.json({ status: 'success', user: user.dataValues, companyID: null, token: token })
+                            }
+
+
+                        }
+                        else res.json({ status: 'failed', msg: 'Wrong password' })
                     } else {
-                        let token = jwt.sign({ id: user.dataValues.id, username: user.dataValues.username }, 'whatever it takes', { expiresIn: 129600 }); // Sigining the token
-                        res.json({ status: 'success', user: user.dataValues, companyID: null, token: token })
+                        res.json({ status: 'failed', msg: 'User does not exist' })
                     }
+                })
+
+            } else res.json({ status: 'failed', msg: 'Company does not exist' })
 
 
-                }
-                else res.json({status:'failed' , msg: 'El password no coincide'})
-            } else {
-                res.json({status:'failed', msg:'El usuario no existe'})
-            }
         })
 
 
