@@ -58,10 +58,10 @@ exports.createUser = (req, res) => {
                             })
 
                             let token = jwt.sign({ id: user.id, email: user.email }, 'whatever it takes', { expiresIn: 129600 }); // Sigining the token
-                            res.json({ user: user.dataValues, company: companyID, token: token })
+                            res.json({ status: 'success' , user: user.dataValues, company: companyID, token: token })
                         }
 
-                        else res.json('El password no coincide')
+                        else res.json({status:'failed', msg:'El password no coincide'})
                     }
                     else {
                         createNewUser(email, username, password, companyID, res)
@@ -69,7 +69,7 @@ exports.createUser = (req, res) => {
                 })
 
             } else {
-                res.json('La compania no existe')
+                res.json({status:'failed', msg: 'La compania no existe'})
             }
         })
 
@@ -131,6 +131,7 @@ const createNewUser = async (email, username, password, companyID, response) => 
         usersCompanyCont.createUsersCompany(user.id, companyID)
         let token = jwt.sign({ id: user.dataValues.id, email: user.dataValues.email }, 'whatever it takes', { expiresIn: 129600 }); // Sigining the token
         response.json({
+            status: 'success',
             user: user,
             company: companyID,
             token: token
@@ -164,18 +165,18 @@ exports.login = (req, res) => {
                             if (match) {
                                 let token = jwt.sign({ id: user.dataValues.id, username: user.dataValues.username }, 'whatever it takes', { expiresIn: 129600 }); // Sigining the token
                                 res.json({ user: user.dataValues, companyID: null, token: token })
-                            } else res.json('No tiene asociada esa compania')
+                            } else res.json({status: 'failed', msg : 'No tiene asociada esa compania'})
                         })
                     } else {
                         let token = jwt.sign({ id: user.dataValues.id, username: user.dataValues.username }, 'whatever it takes', { expiresIn: 129600 }); // Sigining the token
-                        res.json({ user: user.dataValues, companyID: null, token: token })
+                        res.json({ status: 'success', user: user.dataValues, companyID: null, token: token })
                     }
 
 
                 }
-                else res.json('El password no coincide')
+                else res.json({status:'failed' , msg: 'El password no coincide'})
             } else {
-                res.json('El usuario no existe')
+                res.json({status:'failed', msg:'El usuario no existe'})
             }
         })
 
