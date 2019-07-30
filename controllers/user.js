@@ -33,20 +33,28 @@ proceso de agregar un usuario */
 exports.createUser = (req, res) => {
 
     try {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            res.status(422).json({ errors: errors.array() });
-            return;
-        }
+        
         const { email, username, password, companyID } = req.body
         // Chequeo si la compania existe
         ckeckIfCompExist(companyID).then((exist) => {
 
             if (exist) {
-                checkIfExist(email).then((result) => {
+
+                // Chequeo si el email existe
+                checkIfExist(email, null).then((result) => {
+                    // Luego chequeo si el username existe
+
+                    // Luego: 
+                    // Si el username existe (email no existe) y coincide la contrasena => Lo dejo entrar
+                    // Si el email existe (username no existe) y coincide la contrasena => Lo dejo entrar
+                    // Si ambos existen y coincide la contrasena => Lo dejo entrar
+                    // Si ambos no existen => creo un usuario nuevo
+                    // Si alguno existe pero no coincide la contrasena => user/email taken
+                    // Si ambos existen y no coincide la contrasena => user/email?
 
                     const exist = result.exist
                     const user = result.user
+                    console.log('Este es el usuario')
                     console.log(user)
                     if (exist) {
 
@@ -61,7 +69,7 @@ exports.createUser = (req, res) => {
                             res.json({ status: 'success', user: user.dataValues, company: companyID, token: token })
                         }
 
-                        else res.json({ status: 'failed', msg: 'Wrong password' })
+                        else res.json({ status: 'failed', msg: 'User taken' })
                     }
                     else {
                         createNewUser(email, username, password, companyID, res)
@@ -99,10 +107,12 @@ CASO 2: el email existe pero la contrasena no coincide con la bd =>
  */
 
 /* Esta funcion chequea si existe el email, sino continua con agregar un nuevo usuario */
-const checkIfExist = (email) => {
-    return (User.findAll({
+const checkIfExist = (email,username) => {
+    if(username)
+    {return (User.findAll({
         where: {
             email: email,
+            username:username
         }
     })).then(function (user) {
 
@@ -113,7 +123,23 @@ const checkIfExist = (email) => {
         // Debo agregarle el response a la empresa
 
 
-    })
+    })}
+    else{
+        return (User.findAll({
+            where: {
+                email: email,
+            }
+        })).then(function (user) {
+    
+            if (user.length > 0) // Aqui debo manejar que si el email y contrasena coinciden, entonces le agrego el companyID
+                return { exist: true, user: user[0] }
+            else return { exist: false, user: null }
+            // Falta probar agregando una nueva empresa
+            // Debo agregarle el response a la empresa
+    
+    
+        })
+    }
 }
 
 
@@ -154,7 +180,7 @@ exports.login = (req, res) => {
 
         ckeckIfCompExist(companyID).then((companyExist) => {
             if (companyExist) {
-                checkIfExist(email).then((result) => {
+                checkIfExist(email, null).then((result) => {
                     const exist = result.exist
                     const user = result.user
 
