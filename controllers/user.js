@@ -41,7 +41,7 @@ exports.createUser = (req, res) => {
             if (exist) {
 
                 // Chequeo si el email existe
-                checkIfExist(email, null).then((result) => {
+                checkifExistEmail(email).then((result) => {
                     // Luego chequeo si el username existe
 
                     // Luego: 
@@ -50,30 +50,38 @@ exports.createUser = (req, res) => {
                     // Si ambos existen y coincide la contrasena => Lo dejo entrar
                     // Si ambos no existen => creo un usuario nuevo
                     // Si alguno existe pero no coincide la contrasena => user/email taken
-                    // Si ambos existen y no coincide la contrasena => user/email?
+                    // Si ambos existen y no coincide la contrasena => user/email taken?
 
-                    const exist = result.exist
+                    const existEmail = result.exist
                     const user = result.user
                     console.log('Este es el usuario')
                     console.log(user)
-                    if (exist) {
+                    checkIfExistUsername(username).then((resultUsername) => {
+                        const existUsername = resultUsername.exist
+                        const user_username = resultUsername.user
 
-                        if (user.dataValues.password === password) {
-                            // Debo chequear que la compania exista
-                            usersCompanyCont.createUsersCompany(user.dataValues.id, companyID).then((resp) => {
-                                console.log("Esta es la resssspppp")
-                                console.log(resp)
-                            })
+                        if (existEmail && existUsername) {
 
-                            let token = jwt.sign({ id: user.id, email: user.email }, 'whatever it takes', { expiresIn: 129600 }); // Sigining the token
-                            res.json({ status: 'success', user: user.dataValues, company: companyID, token: token })
+                            if (user.dataValues.password === password) {
+                                // Debo chequear que la compania exista
+                                usersCompanyCont.createUsersCompany(user.dataValues.id, companyID).then((resp) => {
+                                    console.log("Esta es la resssspppp")
+                                    console.log(resp)
+                                })
+    
+                                let token = jwt.sign({ id: user.id, email: user.email }, 'whatever it takes', { expiresIn: 129600 }); // Sigining the token
+                                res.json({ status: 'success', user: user.dataValues, company: companyID, token: token })
+                            }
+    
+                            else res.json({ status: 'failed', msg: 'User taken' })
+                        }
+                        else {
+                            existUsername && !existEmail  || existEmail && !existUsername  ? res.json({ status: 'failed', msg: 'User taken' }) :
+                            createNewUser(email, username, password, companyID, res)
                         }
 
-                        else res.json({ status: 'failed', msg: 'User taken' })
-                    }
-                    else {
-                        createNewUser(email, username, password, companyID, res)
-                    }
+                    })
+                    
                 })
 
             } else {
@@ -107,11 +115,28 @@ CASO 2: el email existe pero la contrasena no coincide con la bd =>
  */
 
 /* Esta funcion chequea si existe el email, sino continua con agregar un nuevo usuario */
-const checkIfExist = (email,username) => {
-    if(username)
-    {return (User.findAll({
+const checkifExistEmail = (email) => {
+   
+    return (User.findAll({
         where: {
-            email: email,
+            email: email
+        }
+    })).then(function (user) {
+
+        if (user.length > 0) // Aqui debo manejar que si el email y contrasena coinciden, entonces le agrego el companyID
+            return { exist: true, user: user[0] }
+        else return { exist: false, user: null }
+        // Falta probar agregando una nueva empresa
+        // Debo agregarle el response a la empresa
+
+
+    })
+
+}
+
+const checkIfExistUsername = (username) => {
+    return (User.findAll({
+        where: {
             username:username
         }
     })).then(function (user) {
@@ -123,25 +148,8 @@ const checkIfExist = (email,username) => {
         // Debo agregarle el response a la empresa
 
 
-    })}
-    else{
-        return (User.findAll({
-            where: {
-                email: email,
-            }
-        })).then(function (user) {
-    
-            if (user.length > 0) // Aqui debo manejar que si el email y contrasena coinciden, entonces le agrego el companyID
-                return { exist: true, user: user[0] }
-            else return { exist: false, user: null }
-            // Falta probar agregando una nueva empresa
-            // Debo agregarle el response a la empresa
-    
-    
-        })
-    }
+    })
 }
-
 
 /* Esta funcion agrega el nuevo usuario en la bd */
 const createNewUser = async (email, username, password, companyID, response) => {
