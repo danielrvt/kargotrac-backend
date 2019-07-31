@@ -188,7 +188,7 @@ exports.login = (req, res) => {
 
         ckeckIfCompExist(companyID).then((companyExist) => {
             if (companyExist) {
-                checkIfExist(email, null).then((result) => {
+                checkifExistEmail(email).then((result) => {
                     const exist = result.exist
                     const user = result.user
 
@@ -201,7 +201,7 @@ exports.login = (req, res) => {
 
                                     if (match) {
                                         let token = jwt.sign({ id: user.dataValues.id, username: user.dataValues.username }, 'whatever it takes', { expiresIn: 129600 }); // Sigining the token
-                                        res.json({ user: user.dataValues, companyID: null, token: token })
+                                        res.json({ status:'success', user: user.dataValues, companyID: null, token: token })
                                     } else res.json({ status: 'failed', msg: 'User is not associated to that company' })
                                 })
                             } else {
