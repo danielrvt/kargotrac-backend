@@ -33,7 +33,7 @@ proceso de agregar un usuario */
 exports.createUser = (req, res) => {
 
     try {
-        
+
         const { email, username, password, companyID } = req.body
         // Chequeo si la compania existe
         ckeckIfCompExist(companyID).then((exist) => {
@@ -68,20 +68,20 @@ exports.createUser = (req, res) => {
                                     console.log("Esta es la resssspppp")
                                     console.log(resp)
                                 })
-    
+
                                 let token = jwt.sign({ id: user.id, email: user.email }, 'whatever it takes', { expiresIn: 129600 }); // Sigining the token
                                 res.json({ status: 'success', user: user.dataValues, company: companyID, token: token })
                             }
-    
+
                             else res.json({ status: 'failed', msg: 'User taken' })
                         }
                         else {
-                            existUsername && !existEmail  || existEmail && !existUsername  ? res.json({ status: 'failed', msg: 'User taken' }) :
-                            createNewUser(email, username, password, companyID, res)
+                            existUsername && !existEmail || existEmail && !existUsername ? res.json({ status: 'failed', msg: 'User taken' }) :
+                                createNewUser(email, username, password, companyID, res)
                         }
 
                     })
-                    
+
                 })
 
             } else {
@@ -116,7 +116,7 @@ CASO 2: el email existe pero la contrasena no coincide con la bd =>
 
 /* Esta funcion chequea si existe el email, sino continua con agregar un nuevo usuario */
 const checkifExistEmail = (email) => {
-   
+
     return (User.findAll({
         where: {
             email: email
@@ -137,7 +137,7 @@ const checkifExistEmail = (email) => {
 const checkIfExistUsername = (username) => {
     return (User.findAll({
         where: {
-            username:username
+            username: username
         }
     })).then(function (user) {
 
@@ -186,6 +186,7 @@ exports.login = (req, res) => {
 
         const { email, password, companyID } = req.body
 
+
         ckeckIfCompExist(companyID).then((companyExist) => {
             if (companyExist) {
                 checkifExistEmail(email).then((result) => {
@@ -201,7 +202,7 @@ exports.login = (req, res) => {
 
                                     if (match) {
                                         let token = jwt.sign({ id: user.dataValues.id, username: user.dataValues.username }, 'whatever it takes', { expiresIn: 129600 }); // Sigining the token
-                                        res.json({ status:'success', user: user.dataValues, companyID: companyID, token: token })
+                                        res.json({ status: 'success', user: user.dataValues, companyID: companyID, token: token })
                                         console.log(user.dataValues)
                                     } else res.json({ status: 'failed', msg: 'User is not associated to that company' })
                                 })
@@ -257,5 +258,61 @@ const ckeckIfCompExist = (companyID) => {
             return true
         else return false
     })
+
+}
+
+exports.editUser = (req, res) => {
+
+    const token = req.headers
+    const updates = req.body
+
+    console.log('Estos son los upt')
+    console.log(updates)
+    console.log(token.usertoken)
+    //res.json({ status: 'success', user: null, companyID: null, token: token })
+
+    try {
+        decoded = jwt.verify(token.usertoken, 'whatever it takes');
+        console.log(decoded)
+    } catch (e) {
+        return res.status(401).send('unauthorized');
+    }
+    const userID = decoded.id
+    User.findOne({ id: userID }).then(function (user) {
+        if (updates.address.length > 0) {
+            User.update(
+                { address: updates.address },
+                { where: { id: userID } }
+            ).then(() => { console.log('address updated') })
+        }
+        if (updates.phone1.length > 0) {
+            User.update(
+                { phone1: updates.phone1 },
+                { where: { id: userID } }
+            ).then(() => { console.log('phone1 updated') })
+        }
+        if (updates.phone2.length > 0) {
+            User.update(
+                { phone2: updates.phone2 },
+                { where: { id: userID } }
+            ).then(() => { console.log('phone2 updated') })
+        }
+        //window.alert(user)
+        //return res.json(user);
+        console.log('Este es el usuario actualizado')
+        console.log(user)
+        res.json(user)
+    });
+
+}
+
+const update = (updatedAtt, value, userID) => {
+    User.update(
+        { [updatedAtt]: value },
+        { where: { id: userID } }
+    )
+        .then(function (rowsUpdated) {
+            res.json(rowsUpdated)
+        }, function (e) { console.log(e) })
 
 }
