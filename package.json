@@ -4,7 +4,8 @@
   "description": "Backend del sistema Kargotrack",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "sequelize-skeleton":  "./node_modules/sequelize-cli/lib/sequelize init:models; ./node_modules/sequelize-cli/lib/sequelize init:config"
   },
   "repository": {
     "type": "git",
