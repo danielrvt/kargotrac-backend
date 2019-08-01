@@ -201,7 +201,8 @@ exports.login = (req, res) => {
 
                                     if (match) {
                                         let token = jwt.sign({ id: user.dataValues.id, username: user.dataValues.username }, 'whatever it takes', { expiresIn: 129600 }); // Sigining the token
-                                        res.json({ status:'success', user: user.dataValues, companyID: null, token: token })
+                                        res.json({ status:'success', user: user.dataValues, companyID: companyID, token: token })
+                                        console.log(user.dataValues)
                                     } else res.json({ status: 'failed', msg: 'User is not associated to that company' })
                                 })
                             } else {
