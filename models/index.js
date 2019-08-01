@@ -8,12 +8,25 @@ const env = process.env.NODE_ENV || 'development';
 const config = require(__dirname + '/../config/config.js');
 const db = {};
 
-let sequelize = new Sequelize(config.database, config.username, config.password,
+
+var database = process.env.DATABASE_URL || 'campeonatodb'
+var sequelize = ""
+
+if (process.env.DATABASE_URL) {
+    sequelize = new Sequelize(database)
+}
+else {
+    sequelize = new Sequelize(database, 'mysql', '', {
+        dialect: 'mysql'
+    });
+}
+/*
+var sequelize = new Sequelize(config.database, config.username, config.password,
   {
     host: config.host,
     dialect: 'mysql'
   });
-
+*/
 
 fs
   .readdirSync(__dirname)
