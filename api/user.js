@@ -38,6 +38,10 @@ router.post(
     userController.login
 )
 
+router.patch(
+    '/users/me',
+    userController.editUser
+)
 //enable pre-flight
 router.options("*", cors(options));
 
