@@ -9,7 +9,9 @@ const config = require(__dirname + '/../config/config.js');
 const db = {};
 
 
-var database = process.env.DATABASE_URL || 'campeonatodb'
+var database = process.env.DATABASE_URL || 'kargotrack_db'
+console.log('DATABASEEEEE')
+console.log(database)
 var sequelize = ""
 
 if (process.env.DATABASE_URL) {
