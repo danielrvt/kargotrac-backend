@@ -201,8 +201,13 @@ exports.login = (req, res) => {
                                 checkIfCompMatch(user.dataValues.id, companyID).then((match) => {
 
                                     if (match) {
-                                        let token = jwt.sign({ id: user.dataValues.id, username: user.dataValues.username }, 'whatever it takes', { expiresIn: 129600 }); // Sigining the token
-                                        res.json({ status: 'success', user: user.dataValues, companyID: companyID, token: token })
+                                        findUsersCompanies(user.dataValues.id).then((companies) => {
+                                            if (companies) {
+                                                let token = jwt.sign({ id: user.dataValues.id, username: user.dataValues.username }, 'whatever it takes', { expiresIn: 129600 }); // Sigining the token
+                                                res.json({ status: 'success', user: user.dataValues, companyID: companyID, token: token, usersCompanies: companies })
+                                            }
+                                        })
+
                                         console.log(user.dataValues)
                                     } else res.json({ status: 'failed', msg: 'User is not associated to that company' })
                                 })
@@ -261,6 +266,18 @@ const ckeckIfCompExist = (companyID) => {
 
 }
 
+const findUsersCompanies = (userID) => {
+    return (usersCompany.findAll({
+        where: {
+            userID: userID
+        }
+    })).then(function (companies) {
+
+        if (companies.length > 0)
+            return companies
+        else return ''
+    })
+}
 exports.editUser = (req, res) => {
 
     const token = req.headers
@@ -272,7 +289,8 @@ exports.editUser = (req, res) => {
     console.log(updates)
     console.log(token.usertoken)
     //res.json({ status: 'success', user: null, companyID: null, token: token })
-
+    console.log('COMPANY ID')
+    console.log(token.companyid)
     try {
         decoded = jwt.verify(token.usertoken, 'whatever it takes');
         console.log(decoded)
@@ -280,7 +298,7 @@ exports.editUser = (req, res) => {
         return res.status(401).send('unauthorized');
     }
     const userID = decoded.id
-    User.findOne({where:{ id: userID }}).then(function (user) {
+    User.findOne({ where: { id: userID } }).then(function (user) {
         if (updates.address.length > 0) {
             addressUpdated = true
             User.update(
@@ -306,9 +324,9 @@ exports.editUser = (req, res) => {
         //return res.json(user);
         console.log('Este es el usuario actualizado')
         console.log(user)
-        res.json({ status: 'success', user: user.dataValues, companyID: null, token: token.usertoken})
+        res.json({ status: 'success', user: user.dataValues, companyID: token.companyid, token: token.usertoken })
         //res.json(user)
-    }, function(e) {res.json(e)});
+    }, function (e) { res.json(e) });
 
 }
 
@@ -341,10 +359,10 @@ exports.getUser = (req, res) => {
     }
     const userID = decoded.id
     console.log(userID)
-    User.findOne({ where: {id: userID} }).then(function (user) {
+    User.findOne({ where: { id: userID } }).then(function (user) {
         console.log('Este es el usuario')
         console.log(user)
-        res.json({ status: 'success', user: user.dataValues, companyID: null, token: token.usertoken})
+        res.json({ status: 'success', user: user.dataValues, companyID: token.companyid, token: token.usertoken })
     });
 
 }
