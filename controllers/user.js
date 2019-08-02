@@ -68,9 +68,13 @@ exports.createUser = (req, res) => {
                                     console.log("Esta es la resssspppp")
                                     console.log(resp)
                                 })
-
-                                let token = jwt.sign({ id: user.id, email: user.email }, 'whatever it takes', { expiresIn: 129600 }); // Sigining the token
-                                res.json({ status: 'success', user: user.dataValues, company: companyID, token: token })
+                                findUsersCompanies(user.dataValues.id).then((companies) => {
+                                    if (companies) {
+                                        let token = jwt.sign({ id: user.dataValues.id, username: user.dataValues.username }, 'whatever it takes', { expiresIn: 129600 }); // Sigining the token
+                                        res.json({ status: 'success', user: user.dataValues, companyID: companyID, token: token, usersCompanies: companies })
+                                    }
+                                })
+                                
                             }
 
                             else res.json({ status: 'failed', msg: 'User taken' })
@@ -163,12 +167,11 @@ const createNewUser = async (email, username, password, companyID, response) => 
             password
         })
         usersCompanyCont.createUsersCompany(user.id, companyID)
-        let token = jwt.sign({ id: user.dataValues.id, email: user.dataValues.email }, 'whatever it takes', { expiresIn: 129600 }); // Sigining the token
-        response.json({
-            status: 'success',
-            user: user,
-            company: companyID,
-            token: token
+        findUsersCompanies(user.dataValues.id).then((companies) => {
+            if (companies) {
+                let token = jwt.sign({ id: user.dataValues.id, username: user.dataValues.username }, 'whatever it takes', { expiresIn: 129600 }); // Sigining the token
+                res.json({ status: 'success', user: user.dataValues, companyID: companyID, token: token, usersCompanies: companies })
+            }
         })
     } catch (e) {
         console.log(e)
