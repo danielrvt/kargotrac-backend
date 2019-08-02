@@ -42,6 +42,11 @@ router.patch(
     '/users/me',
     userController.editUser
 )
+
+router.get(
+    '/users/me',
+    userController.getUser
+)
 //enable pre-flight
 router.options("*", cors(options));
 
