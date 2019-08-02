@@ -7,6 +7,7 @@ const basename = path.basename(__filename);
 const env = process.env.NODE_ENV || 'development';
 const config = require(__dirname + '/../config/config.js');
 const db = {};
+<<<<<<< HEAD
 
 
 var database = process.env.DATABASE_URL || 'kargotrack_db'
@@ -16,6 +17,16 @@ var sequelize = ""
 
 if (process.env.DATABASE_URL) {
     sequelize = new Sequelize(database)
+=======
+console.log('Aqui toy')
+console.log(process.env['DIALECT'])
+let sequelize;
+if (config.use_env_variable) {
+  sequelize = new Sequelize(process.env[config.use_env_variable], config,
+    {dialect: 'mysql'});
+} else {
+  sequelize = new Sequelize(config.database, config.username, config.password, config,  {dialect: 'mysql'});
+>>>>>>> fixes
 }
 else {
     sequelize = new Sequelize(database, 'mysql', '', {
