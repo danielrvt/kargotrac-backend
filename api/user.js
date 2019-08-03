@@ -12,7 +12,7 @@ const options = {
     allowedHeaders: ["Origin", "X-Requested-With", "Content-Type", "Accept", "X-Access-Token", "Access-Control-Allow-Origin"],
     credentials: true,
     methods: "GET,HEAD,OPTIONS,PUT,PATCH,POST,DELETE",
-    origin: 'http://localhost:3000',
+    origin: true,
     preflightContinue: false
 };
 
@@ -25,6 +25,7 @@ router.use(cors(options));
 
 router.post(
     '/register',
+    cors(),
     userController.validate('createUser'),
     userController.createUser
 )
