@@ -308,21 +308,21 @@ exports.editUser = (req, res) => {
     }
     const userID = decoded.id
     User.findOne({ where: { id: userID } }).then(function (user) {
-        if (updates.address.length > 0) {
+        if (updates.address && updates.address.length > 0) {
             addressUpdated = true
             User.update(
                 { address: updates.address },
                 { where: { id: userID } }
             ).then(() => { console.log('address updated') })
         }
-        if (updates.phone1.length > 0) {
+        if (updates.phone1 && updates.phone1.length > 0) {
             phone1Updated = true;
             User.update(
                 { phone1: updates.phone1 },
                 { where: { id: userID } }
             ).then(() => { console.log('phone1 updated') })
         }
-        if (updates.phone2.length > 0) {
+        if (updates.phone1 && updates.phone2.length > 0) {
             phone2Updated = true
             User.update(
                 { phone2: updates.phone2 },
