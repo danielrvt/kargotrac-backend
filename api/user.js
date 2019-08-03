@@ -20,6 +20,10 @@ const options = {
 router.use(cors(options));
 
 //add your routes
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    next();
+});
 
 
 router.post(
