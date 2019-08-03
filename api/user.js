@@ -8,7 +8,6 @@ const cors = require("cors");
 
 
 //options for cors midddleware
-/*
 const options = {
     allowedHeaders: ["Origin", "X-Requested-With", "Content-Type", "Accept", "X-Access-Token", "Access-Control-Allow-Origin"],
     credentials: true,
@@ -19,7 +18,7 @@ const options = {
 
 //use cors middleware
 router.use(cors(options));
-*/
+
 //add your routes
 
 
@@ -50,7 +49,7 @@ router.get(
     userController.getUser
 )
 //enable pre-flight
-//router.options("*", cors(options));
+router.options("*", cors(options));
 
 module.exports = router
 
