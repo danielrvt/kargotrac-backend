@@ -177,7 +177,7 @@ const createNewUser = async (email, username, password, companyID, response) => 
 
 
         let token = jwt.sign({ id: user.dataValues.id, username: user.dataValues.username }, 'whatever it takes', { expiresIn: 129600 }); // Sigining the token
-        response.json({ status: 'success', user: user.dataValues, companyID: companyID, token: token, usersCompanies: null })
+        response.json({ status: 'success', user: user.dataValues, companyID: companyID, token: token, usersCompanies: companyID })
 
     } catch (e) {
         console.log(e)
