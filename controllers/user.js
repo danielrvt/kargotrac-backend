@@ -68,13 +68,19 @@ exports.createUser = (req, res) => {
                                     console.log("Esta es la resssspppp")
                                     console.log(resp)
                                 })
+
                                 findUsersCompanies(user.dataValues.id).then((companies) => {
                                     if (companies) {
                                         let token = jwt.sign({ id: user.dataValues.id, username: user.dataValues.username }, 'whatever it takes', { expiresIn: 129600 }); // Sigining the token
                                         res.json({ status: 'success', user: user.dataValues, companyID: companyID, token: token, usersCompanies: companies })
+                                    }else{
+                                        res.json({ status: 'failed', msg: 'Something wrong happened' })
                                     }
                                 })
-                                
+
+
+
+
                             }
 
                             else res.json({ status: 'failed', msg: 'User taken' })
@@ -167,12 +173,12 @@ const createNewUser = async (email, username, password, companyID, response) => 
             password
         })
         usersCompanyCont.createUsersCompany(user.id, companyID)
-        findUsersCompanies(user.dataValues.id).then((companies) => {
-            if (companies) {
-                let token = jwt.sign({ id: user.dataValues.id, username: user.dataValues.username }, 'whatever it takes', { expiresIn: 129600 }); // Sigining the token
-                res.json({ status: 'success', user: user.dataValues, companyID: companyID, token: token, usersCompanies: companies })
-            }
-        })
+
+
+
+        let token = jwt.sign({ id: user.dataValues.id, username: user.dataValues.username }, 'whatever it takes', { expiresIn: 129600 }); // Sigining the token
+        response.json({ status: 'success', user: user.dataValues, companyID: companyID, token: token, usersCompanies: null })
+
     } catch (e) {
         console.log(e)
         console.log('Error caught');
