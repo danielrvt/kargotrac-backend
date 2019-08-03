@@ -17,7 +17,7 @@ const options = {
 };
 
 //use cors middleware
-router.use(cors(options));
+//router.use(cors(options));
 
 //add your routes
 
@@ -32,25 +32,29 @@ router.post(
 
 router.post(
     '/registerCompany',
+    cors(),
     companyController.createCompany
 )
 
 router.post(
     '/users',
+    cors(),
     userController.login
 )
 
 router.patch(
     '/users/me',
+    cors(),
     userController.editUser
 )
 
 router.get(
     '/users/me',
+    cors(),
     userController.getUser
 )
 //enable pre-flight
-router.options("*", cors(options));
+//router.options("*", cors(options));
 
 module.exports = router
 
