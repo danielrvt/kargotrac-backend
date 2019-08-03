@@ -322,7 +322,7 @@ exports.editUser = (req, res) => {
                 { where: { id: userID } }
             ).then(() => { console.log('phone1 updated') })
         }
-        if (updates.phone1 && updates.phone2.length > 0) {
+        if (updates.phone2 && updates.phone2.length > 0) {
             phone2Updated = true
             User.update(
                 { phone2: updates.phone2 },
