@@ -22,8 +22,8 @@ router.use(cors(options));
 //add your routes
 
 router.get('/', (req, res) => {
-    `Welcome to Kargotrack, the server is running in ${process.env.PORT} port`
-    res.json('Succed!')
+    
+    res.json(`Welcome to Kargotrack, the server is running in ${process.env.PORT} port`)
 })
 
 router.post(
