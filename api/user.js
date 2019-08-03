@@ -12,49 +12,47 @@ const options = {
     allowedHeaders: ["Origin", "X-Requested-With", "Content-Type", "Accept", "X-Access-Token", "Access-Control-Allow-Origin"],
     credentials: true,
     methods: "GET,HEAD,OPTIONS,PUT,PATCH,POST,DELETE",
-    origin: true,
+    origin: "http://localhost:3000",
     preflightContinue: false
 };
 
 //use cors middleware
-//router.use(cors(options));
+router.use(cors(options));
 
 //add your routes
 
-
+router.get('/', (req, res) => {
+    `Welcome to Kargotrack, the server is running in ${process.env.PORT} port`
+    res.json('Succed!')
+})
 
 router.post(
     '/register',
-    cors(),
     userController.validate('createUser'),
     userController.createUser
 )
 
 router.post(
     '/registerCompany',
-    cors(),
     companyController.createCompany
 )
 
 router.post(
     '/users',
-    cors(),
     userController.login
 )
 
 router.patch(
     '/users/me',
-    cors(),
     userController.editUser
 )
 
 router.get(
     '/users/me',
-    cors(),
     userController.getUser
 )
 //enable pre-flight
-//router.options("*", cors(options));
+router.options("*", cors(options));
 
 module.exports = router
 
