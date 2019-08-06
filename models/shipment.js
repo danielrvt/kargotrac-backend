@@ -1,6 +1,6 @@
 'use strict';
 module.exports = (sequelize, DataTypes) => {
-  const Shipment = sequelize.define('Shipment', {
+  const Shipments = sequelize.define('Shipments', {
     lbs_weight: DataTypes.DOUBLE,
     pvl_weight: DataTypes.DOUBLE,
     cubic_feet_volume: DataTypes.DOUBLE,
@@ -8,9 +8,9 @@ module.exports = (sequelize, DataTypes) => {
     shipping_way: DataTypes.STRING,
     status: DataTypes.STRING
   }, {});
-  Shipment.associate = function(models) {
+  Shipments.associate = function(models) {
     // associations can be defined here
-    Shipment.hasMany(models.Item)
+    Shipments.hasMany(models.Items)
   };
-  return Shipment;
+  return Shipments;
 };
