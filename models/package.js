@@ -8,6 +8,8 @@ module.exports = (sequelize, DataTypes) => {
   Packages.associate = function(models) {
     // associations can be defined here
     Packages.hasMany(models.Items)
+    Packages.belongsTo(models.Users, { as: 'User', foreignKey: 'id' })
+    Packages.belongsTo(models.Companies, { as: 'Company', foreignKey: 'id' })
   };
   return Packages;
 };
