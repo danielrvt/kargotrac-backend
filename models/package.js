@@ -1,13 +1,13 @@
 'use strict';
 module.exports = (sequelize, DataTypes) => {
-  const Package = sequelize.define('Package', {
+  const Packages = sequelize.define('Packages', {
     tracking_id: DataTypes.STRING,
     seller: DataTypes.STRING,
     status: DataTypes.STRING
   }, {});
-  Package.associate = function(models) {
+  Packages.associate = function(models) {
     // associations can be defined here
-    Package.hasMany(models.Item)
+    Packages.hasMany(models.Items)
   };
-  return Package;
+  return Packages;
 };
