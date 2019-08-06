@@ -377,4 +377,3 @@ exports.getUser = (req, res) => {
     });
 
 }
-
