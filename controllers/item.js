@@ -4,13 +4,12 @@ const Items = require('../models').Items;
 
 // ******************************* GESTION DE ARTICULOS ******************************
 
-const create = async (name, quantity, companyID) => {
+const create = async (name, quantity) => {
     let item = {};
     try {
         item = await Items.create(
             name,
-            parseInt(quantity),
-            parseInt(companyID),
+            parseInt(quantity)
 
         )
     } catch (e) {
@@ -20,6 +19,7 @@ const create = async (name, quantity, companyID) => {
     return item
 }
 
+// DEBO VERIFICAR LA AUTORIZACION!!!!!!!!!!!!!!!!
 exports.createItem = (req, res) => {
 
     const { name, quantity, tracking_id, companyID, userID } = req.body
@@ -37,26 +37,29 @@ exports.createItem = (req, res) => {
             tracking_id: tracking_id
         }
     }).then((package) => {
-        // Creo el item
+        
+        // Pack asociado a compania
+        
+        package[0].setCompany(companyID)
 
+        // Creo el item
         create(
             name,
-            parseInt(quantity),
-            parseInt(companyID)
+            parseInt(quantity)
         ).then((item) => {
             // Seteo las relaciones
 
             // Relacion articulos estan en paquetes
             item.setPackages(package[0].dataValues.id)
-
+        
             User.findOne({
                 where: {
                     id: userID
                 }
             }).then((user) => {
                 
-                // Relacion el articulo esta asociado a un usuario
-                item.setUser(user.dataValues.id)
+                // Relacion el apck esta asociado a un usuario
+                package[0].setUser(user.dataValues.id)
 
                 const response = {
                     tracking_id: tracking_id,
