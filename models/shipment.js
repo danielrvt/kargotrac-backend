@@ -10,7 +10,6 @@ module.exports = (sequelize, DataTypes) => {
   }, {});
   Shipments.associate = function(models) {
     // associations can be defined here
-    Shipments.hasMany(models.Items)
   };
   return Shipments;
 };
