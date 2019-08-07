@@ -53,6 +53,11 @@ router.post(
     '/items',
     itemController.createItem
 )
+
+router.get(
+    '/items',
+    itemController.getItems
+)
 //enable pre-flight
 router.options("*", cors(options));
 
