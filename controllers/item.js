@@ -91,7 +91,7 @@ exports.createItem = (req, res) => {
 exports.getItems = (req, res) => {
 
     headers = req.headers
-    var items = []
+    var items = [] 
     // Chequeo autorizacion
 
     try {
@@ -111,15 +111,39 @@ exports.getItems = (req, res) => {
             UserId: userID,
             CompanyId: parseInt(companyID)
         }
-    }).then(async (packages) => {
+    }).then((packages) => {
         //console.log(packages)
+        console.log("Estos son los paquetes")
         console.log(packages)
         findItems(packages).then((result) => {
             console.log("Este es el resultado")
-            console.log(result[2])
+            console.log(result)
+            for (let index = 0; index < result.length; index++) {
+
+                if (result[index]) {
+                    for (let j = 0; j < result[index].length; j++) {
+                        let item = {
+                            tracking_id: packages[index].dataValues.tracking_id,
+                            status: packages[index].dataValues.status,
+                            name: result[index][j].dataValues.name,
+                            qty: result[index][j].dataValues.quantity,
+                            item_id: result[index][j].dataValues.id,
+                            package_id: packages[index].dataValues.id
+                        }
+                        items.push(item)
+
+
+                    }
+
+                }
+
+            }
+            console.log("ITEMS")
+            console.log(items)
+            res.json(items)
         })
 
-        res.json(items)
+
 
     })
 
@@ -128,7 +152,7 @@ exports.getItems = (req, res) => {
 // Creo que funciona
 // Cuando le doy a agregar debe cerrar el modal
 const findItems = (packages) => {
-    let items = []
+    //let items = []
     return Promise.all(packages.map((package) => {
         return (Items.findAll({
             where: {
