@@ -58,6 +58,16 @@ router.get(
     '/items',
     itemController.getItems
 )
+
+router.patch(
+    '/items',
+    itemController.editItem
+)
+
+router.delete(
+    '/items',
+    itemController.deleteItems
+)
 //enable pre-flight
 router.options("*", cors(options));
 

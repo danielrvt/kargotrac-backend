@@ -50,7 +50,8 @@ exports.createItem = (req, res) => {
         defaults: {
             tracking_id: tracking_id,
             UserId: userID,
-            CompanyId: headers.companyid
+            CompanyId: headers.companyid,
+            status: 'new'
         }
     }).then((package) => {
 
@@ -70,7 +71,7 @@ exports.createItem = (req, res) => {
             //item.setPackages(package[0])
             const response = {
                 tracking_id: tracking_id,
-                status: null,
+                status: package[0].dataValues.status,
                 name: name,
                 qty: quantity,
                 item_id: item.dataValues.id,
@@ -91,7 +92,7 @@ exports.createItem = (req, res) => {
 exports.getItems = (req, res) => {
 
     headers = req.headers
-    var items = [] 
+    var items = []
     // Chequeo autorizacion
 
     try {
@@ -104,7 +105,8 @@ exports.getItems = (req, res) => {
     console.log(headers)
     const userID = decoded.id
     const companyID = headers.companyid
-
+    console.log('*****este es el usuariooooooo')
+    console.log(userID)
 
     Packages.findAll({
         where: {
@@ -163,6 +165,110 @@ const findItems = (packages) => {
         console.log('ITEMS')
         console.log(result)
         return result
+    })
+
+}
+
+/* EDIT ITEMS */
+
+exports.editItem = (req, res) => {
+
+    const { tracking_id, status, name, qty, item_id, package_id } = req.body
+    const headers = req.headers
+
+    try {
+        decoded = jwt.verify(headers.usertoken, 'whatever it takes');
+        console.log(decoded)
+    } catch (e) {
+        return res.status(401).send('unauthorized');
+    }
+    const userID = decoded.id
+
+    console.log("ESTO ES REQ BODY")
+    console.log(req.body)
+    Packages.findOne({
+        where: {
+            id: package_id
+        }
+    }).then((package) => {
+
+        if (package.dataValues.tracking_id !== tracking_id) {
+            Packages.update({ tracking_id: tracking_id },
+                { where: { id: package_id } })
+        }
+
+        Items.findOne({
+            where: {
+                id: item_id
+            }
+        }).then((item) => {
+
+            if(item.dataValues.name !== name){
+                Items.update({
+                    name: name
+                }, {
+                    where: {id: item_id}
+                })
+            }
+            if(item.dataValues.quantity !== qty){
+                Items.update({
+                    quantity: qty
+                }, {
+                    where: {id: item_id}
+                })
+            }
+
+            res.json({ tracking_id: tracking_id, status: status, name: name, qty: qty, item_id: item_id, package_id:package_id })
+        })
+    })
+
+
+
+
+}
+
+/* DELETE ITEMS */
+
+exports.deleteItems = (req, res) => {
+
+    // Arreglar para recibir el articulo para no buscarlo en la bd
+    const { item_id, package_id } = req.body
+    const headers = req.headers
+
+    try {
+        decoded = jwt.verify(headers.usertoken, 'whatever it takes');
+        console.log(decoded)
+    } catch (e) {
+        return res.status(401).send('unauthorized');
+    }
+    const userID = decoded.id
+
+    // Busco el item y lo elimino, luego, busco los items asoc al paq si el paquete tiene mas elementos no lo elimino
+    // en cambio si
+
+    Items.destroy({
+        where: {
+            id: item_id
+        }
+    }).then((number) => {
+
+        Items.findAll({
+            where: {
+                PackageId: package_id
+            }
+        }).then((packageItems) => {
+
+            if(packageItems.length > 0) res.json("Elimine el articulo")
+            else{
+                Packages.destroy({
+                    where:{
+                        id: package_id
+                    }
+                }).then((numberRows) => {
+                    res.json("Elimine el paquete")
+                })
+            }
+        })
     })
 
 }
