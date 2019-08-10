@@ -203,22 +203,22 @@ exports.editItem = (req, res) => {
             }
         }).then((item) => {
 
-            if(item.dataValues.name !== name){
+            if (item.dataValues.name !== name) {
                 Items.update({
                     name: name
                 }, {
-                    where: {id: item_id}
-                })
+                        where: { id: item_id }
+                    })
             }
-            if(item.dataValues.quantity !== qty){
+            if (item.dataValues.quantity !== qty) {
                 Items.update({
                     quantity: qty
                 }, {
-                    where: {id: item_id}
-                })
+                        where: { id: item_id }
+                    })
             }
 
-            res.json({ tracking_id: tracking_id, status: status, name: name, qty: qty, item_id: item_id, package_id:package_id })
+            res.json({ tracking_id: tracking_id, status: status, name: name, qty: qty, item_id: item_id, package_id: package_id })
         })
     })
 
@@ -232,7 +232,7 @@ exports.editItem = (req, res) => {
 exports.deleteItems = (req, res) => {
 
     // Arreglar para recibir el articulo para no buscarlo en la bd
-    const { item_id, package_id } = req.body
+    const { tracking_id, status, name, qty, item_id, package_id } = req.body
     const headers = req.headers
 
     try {
@@ -246,29 +246,41 @@ exports.deleteItems = (req, res) => {
     // Busco el item y lo elimino, luego, busco los items asoc al paq si el paquete tiene mas elementos no lo elimino
     // en cambio si
 
-    Items.destroy({
+    Packages.findOne({
         where: {
-            id: item_id
+            id: package_id
         }
-    }).then((number) => {
+    }).then((package) => {
 
-        Items.findAll({
-            where: {
-                PackageId: package_id
-            }
-        }).then((packageItems) => {
+        if (package.dataValues.status !== "EN_ALMACEN") {
+            Items.destroy({
+                where: {
+                    id: item_id
+                }
+            }).then((number) => {
 
-            if(packageItems.length > 0) res.json("Elimine el articulo")
-            else{
-                Packages.destroy({
-                    where:{
-                        id: package_id
+                Items.findAll({
+                    where: {
+                        PackageId: package_id
                     }
-                }).then((numberRows) => {
-                    res.json("Elimine el paquete")
+                }).then((packageItems) => {
+
+                    if (packageItems.length > 0) res.json({ status: "success", item: { tracking_id: tracking_id, status: status, name: name, qty: qty } })
+                    else {
+                        Packages.destroy({
+                            where: {
+                                id: package_id
+                            }
+                        }).then((numberRows) => {
+                            res.json({ status: "success", item: { tracking_id: tracking_id, status: status, name: name, qty: qty } })
+                        })
+                    }
                 })
-            }
-        })
+            })
+        }
+
+        else res.json("No se pudo eliminar el paquete esta en almacen")
     })
+
 
 }
