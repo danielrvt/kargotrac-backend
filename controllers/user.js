@@ -3,6 +3,8 @@ const { check, validationResult } = require('express-validator');
 const User = require('../models').Users;
 const Company = require('../models').Companies;
 const usersCompany = require('../models').usersCompanies;
+const Packages = require('../models').Package;
+const Items = require('../models').Item;
 const usersCompanyCont = require('./userscompany')
 const jwt = require('jsonwebtoken');
 const exjwt = require('express-jwt');
@@ -212,9 +214,11 @@ exports.login = (req, res) => {
                                     if (match) {
                                         findUsersCompanies(user.dataValues.id).then((companies) => {
                                             if (companies) {
+                                                
                                                 let token = jwt.sign({ id: user.dataValues.id, username: user.dataValues.username }, 'whatever it takes', { expiresIn: 129600 }); // Sigining the token
                                                 res.json({ status: 'success', user: user.dataValues, companyID: companyID, token: token, usersCompanies: companies })
                                             }
+                                            
                                         })
 
                                         console.log(user.dataValues)

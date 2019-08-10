@@ -1,13 +1,16 @@
 'use strict';
 module.exports = (sequelize, DataTypes) => {
-  const Package = sequelize.define('Package', {
+  const Packages = sequelize.define('Packages', {
     tracking_id: DataTypes.STRING,
     seller: DataTypes.STRING,
-    status: DataTypes.STRING
+    status: DataTypes.STRING,
+    UserId: DataTypes.INTEGER,
+    CompanyId: DataTypes.INTEGER
   }, {});
-  Package.associate = function(models) {
+  Packages.associate = function(models) {
     // associations can be defined here
-    Package.hasMany(models.Item)
+    Packages.belongsTo(models.Users, {foreignKey: 'UserId'})
+    Packages.belongsTo(models.Companies, {foreignKey: 'CompanyId'})
   };
-  return Package;
+  return Packages;
 };

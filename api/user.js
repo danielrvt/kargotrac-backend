@@ -1,5 +1,6 @@
 
 const userController = require('../controllers/user')
+const itemController = require('../controllers/item')
 const companyController = require('../controllers/company')
 const express = require('express')
 const router = express.Router()
@@ -50,6 +51,26 @@ router.patch(
 router.get(
     '/users/me',
     userController.getUser
+)
+
+router.post(
+    '/items',
+    itemController.createItem
+)
+
+router.get(
+    '/items',
+    itemController.getItems
+)
+
+router.patch(
+    '/items',
+    itemController.editItem
+)
+
+router.delete(
+    '/items',
+    itemController.deleteItems
 )
 //enable pre-flight
 router.options("*", cors(options));
