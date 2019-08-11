@@ -40,10 +40,10 @@ exports.createUsersCompany = (userID, companyID) => {
 
         return (searchUserID(userID, companyID).then((existCompany)=>{
             if(existCompany){
-                return 'Ya la compania esta asoc al usuario'
+                return null
             }else{
                 createNewUserCompany(userID, companyID)
-                return 'Nueva compania asociada'
+                return companyID
             }
 
         }))

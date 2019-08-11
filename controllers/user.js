@@ -67,17 +67,23 @@ exports.createUser = (req, res) => {
                             if (user.dataValues.password === password) {
                                 // Debo chequear que la compania exista
                                 usersCompanyCont.createUsersCompany(user.dataValues.id, companyID).then((resp) => {
+                                    if (!resp) res.json({ status: 'failed', msg: 'Company already associated with user. Go to login' })
+                                    else {
+                                        findUsersCompanies(user.dataValues.id).then((companies) => {
 
-                                    findUsersCompanies(user.dataValues.id).then((companies) => {
-                                        console.log("Estas son las companias")
-                                        console.log(companies)
-                                        if (companies) {
-                                            let token = jwt.sign({ id: user.dataValues.id, username: user.dataValues.username }, 'whatever it takes', { expiresIn: 129600 }); // Sigining the token
-                                            res.json({ status: 'success', user: user.dataValues, companyID: companyID, token: token, usersCompanies: companies })
-                                        } else {
-                                            res.json({ status: 'failed', msg: 'Something wrong happened' })
-                                        }
-                                    })
+                                            if (companies) {
+                                                companies.map((company) => {
+                                                    return company.dataValues.companyID
+                                                })
+                                                console.log("ESTAS SON LAS COMPANIES")
+                                                console.log(companies)
+                                                let token = jwt.sign({ id: user.dataValues.id, username: user.dataValues.username }, 'whatever it takes', { expiresIn: 129600 }); // Sigining the token
+                                                res.json({ status: 'success', user: user.dataValues, companyID: companyID, token: token, usersCompanies: companies })
+                                            } else {
+                                                res.json({ status: 'failed', msg: 'Something wrong happened' })
+                                            }
+                                        })
+                                    }
                                 })
 
 
