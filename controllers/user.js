@@ -196,52 +196,47 @@ exports.login = (req, res) => {
     try {
 
         const { email, password, companyID } = req.body
+        checkifExistEmail(email).then((result) => {
+            const exist = result.exist
+            const user = result.user
 
+            if (exist) {
 
-        ckeckIfCompExist(companyID).then((companyExist) => {
-            if (companyExist) {
-                checkifExistEmail(email).then((result) => {
-                    const exist = result.exist
-                    const user = result.user
+                if (user.dataValues.password === password) {
 
-                    if (exist) {
+                    findUsersCompanies((companies) => {
 
-                        if (user.dataValues.password === password) {
+                        if (companies) {
 
-                            findUsersCompanies((companies) => {
-
-                                if (companies) {
-
-                                    if (companyID) {
-                                        checkIfCompMatch(user.dataValues.id, companyID).then((match) => {
-                                            if (match) {
-                                                let token = jwt.sign({ id: user.dataValues.id, username: user.dataValues.username }, 'whatever it takes', { expiresIn: 129600 }); // Sigining the token
-                                                res.json({ status: 'success', user: user.dataValues, companyID: companyID, token: token, usersCompanies: companies })
-                                            }
-                                            else res.json({ status: 'failed', msg: 'User is not associated to that company' })
-                                        })
-                                    } else {
+                            if (companyID) {
+                                checkIfCompMatch(user.dataValues.id, companyID).then((match) => {
+                                    if (match) {
                                         let token = jwt.sign({ id: user.dataValues.id, username: user.dataValues.username }, 'whatever it takes', { expiresIn: 129600 }); // Sigining the token
-                                        res.json({ status: 'success', user: user.dataValues, companyID: companies[0], token: token, usersCompanies: null })
+                                        res.json({ status: 'success', user: user.dataValues, companyID: companyID, token: token, usersCompanies: companies })
                                     }
+                                    else res.json({ status: 'failed', msg: 'User is not associated to that company or the company does not exist' })
+                                })
+                            } else {
+                                let token = jwt.sign({ id: user.dataValues.id, username: user.dataValues.username }, 'whatever it takes', { expiresIn: 129600 }); // Sigining the token
+                                res.json({ status: 'success', user: user.dataValues, companyID: companies[0], token: token, usersCompanies: null })
+                            }
 
-                                } else {
-                                    res.json({ status: 'failed', msg: 'User is not associated to a company' })
-                                }
-                            })
-
-
+                        } else {
+                            res.json({ status: 'failed', msg: 'User is not associated to a company' })
                         }
-                        else res.json({ status: 'failed', msg: 'Wrong password' })
-                    } else {
-                        res.json({ status: 'failed', msg: 'User does not exist' })
-                    }
-                })
-
-            } else res.json({ status: 'failed', msg: 'Company does not exist' })
+                    })
 
 
+                }
+                else res.json({ status: 'failed', msg: 'Wrong password' })
+            } else {
+                res.json({ status: 'failed', msg: 'User does not exist' })
+            }
         })
+
+
+
+
 
 
     } catch (err) {
