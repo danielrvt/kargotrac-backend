@@ -121,7 +121,7 @@ exports.getItems = (req, res) => {
             console.log("Este es el resultado")
             console.log(result)
             for (let index = 0; index < result.length; index++) {
-
+                // Hacer con map
                 if (result[index]) {
                     for (let j = 0; j < result[index].length; j++) {
                         let item = {

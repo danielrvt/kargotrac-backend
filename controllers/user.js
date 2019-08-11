@@ -75,7 +75,7 @@ exports.createUser = (req, res) => {
                                     if (companies) {
                                         let token = jwt.sign({ id: user.dataValues.id, username: user.dataValues.username }, 'whatever it takes', { expiresIn: 129600 }); // Sigining the token
                                         res.json({ status: 'success', user: user.dataValues, companyID: companyID, token: token, usersCompanies: companies })
-                                    }else{
+                                    } else {
                                         res.json({ status: 'failed', msg: 'Something wrong happened' })
                                     }
                                 })
@@ -208,26 +208,27 @@ exports.login = (req, res) => {
 
                         if (user.dataValues.password === password) {
 
-                            if (companyID) {
-                                checkIfCompMatch(user.dataValues.id, companyID).then((match) => {
+                            findUsersCompanies((companies) => {
 
-                                    if (match) {
-                                        findUsersCompanies(user.dataValues.id).then((companies) => {
-                                            if (companies) {
-                                                
+                                if (companies) {
+
+                                    if (companyID) {
+                                        checkIfCompMatch(user.dataValues.id, companyID).then((match) => {
+                                            if (match) {
                                                 let token = jwt.sign({ id: user.dataValues.id, username: user.dataValues.username }, 'whatever it takes', { expiresIn: 129600 }); // Sigining the token
                                                 res.json({ status: 'success', user: user.dataValues, companyID: companyID, token: token, usersCompanies: companies })
                                             }
-                                            
+                                            else res.json({ status: 'failed', msg: 'User is not associated to that company' })
                                         })
+                                    } else {
+                                        let token = jwt.sign({ id: user.dataValues.id, username: user.dataValues.username }, 'whatever it takes', { expiresIn: 129600 }); // Sigining the token
+                                        res.json({ status: 'success', user: user.dataValues, companyID: companies[0], token: token, usersCompanies: null })
+                                    }
 
-                                        console.log(user.dataValues)
-                                    } else res.json({ status: 'failed', msg: 'User is not associated to that company' })
-                                })
-                            } else {
-                                let token = jwt.sign({ id: user.dataValues.id, username: user.dataValues.username }, 'whatever it takes', { expiresIn: 129600 }); // Sigining the token
-                                res.json({ status: 'success', user: user.dataValues, companyID: null, token: token })
-                            }
+                                } else {
+                                    res.json({ status: 'failed', msg: 'User is not associated to a company' })
+                                }
+                            })
 
 
                         }
@@ -379,3 +380,5 @@ exports.getUser = (req, res) => {
     });
 
 }
+
+
