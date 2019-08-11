@@ -69,7 +69,7 @@ exports.createUser = (req, res) => {
                                 usersCompanyCont.createUsersCompany(user.dataValues.id, companyID).then((resp) => {
 
                                     findUsersCompanies(user.dataValues.id).then((companies) => {
-                                        console.log(">>>>")
+                                        console.log("Estas son las companias")
                                         console.log(companies)
                                         if (companies) {
                                             let token = jwt.sign({ id: user.dataValues.id, username: user.dataValues.username }, 'whatever it takes', { expiresIn: 129600 }); // Sigining the token
