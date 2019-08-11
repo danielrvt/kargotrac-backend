@@ -202,7 +202,7 @@ exports.login = (req, res) => {
                                 })
                             } else {
                                 let token = jwt.sign({ id: user.dataValues.id, username: user.dataValues.username }, 'whatever it takes', { expiresIn: 129600 }); // Sigining the token
-                                res.json({ status: 'success', user: user.dataValues, companyID: companies[0], token: token, usersCompanies: companies })
+                                res.json({ status: 'success', user: user.dataValues, companyID: companies[0].dataValues.companyID, token: token, usersCompanies: companies })
                             }
 
                         } else {
