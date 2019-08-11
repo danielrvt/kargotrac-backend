@@ -44,23 +44,12 @@ exports.createUser = (req, res) => {
 
                 // Chequeo si el email existe
                 checkifExistEmail(email).then((result) => {
-                    // Luego chequeo si el username existe
-
-                    // Luego: 
-                    // Si el username existe (email no existe) y coincide la contrasena => Lo dejo entrar
-                    // Si el email existe (username no existe) y coincide la contrasena => Lo dejo entrar
-                    // Si ambos existen y coincide la contrasena => Lo dejo entrar
-                    // Si ambos no existen => creo un usuario nuevo
-                    // Si alguno existe pero no coincide la contrasena => user/email taken
-                    // Si ambos existen y no coincide la contrasena => user/email taken?
 
                     const existEmail = result.exist
                     const user = result.user
-                    console.log('Este es el usuario')
-                    console.log(user)
+
                     checkIfExistUsername(username).then((resultUsername) => {
                         const existUsername = resultUsername.exist
-                        const user_username = resultUsername.user
 
                         if (existEmail && existUsername) {
 
@@ -69,27 +58,16 @@ exports.createUser = (req, res) => {
                                 usersCompanyCont.createUsersCompany(user.dataValues.id, companyID).then((resp) => {
                                     if (!resp) res.json({ status: 'failed', msg: 'Company already associated with user. Go to login' })
                                     else {
+                                        companies.map((company) => {
+                                            return company.dataValues.companyID
+                                        })
                                         findUsersCompanies(user.dataValues.id).then((companies) => {
+                                            let token = jwt.sign({ id: user.dataValues.id, username: user.dataValues.username }, 'whatever it takes', { expiresIn: 129600 }); // Sigining the token
+                                            res.json({ status: 'success', user: user.dataValues, companyID: companyID, token: token, usersCompanies: companies })
 
-                                            if (companies) {
-                                                companies.map((company) => {
-                                                    return company.dataValues.companyID
-                                                })
-                                                console.log("ESTAS SON LAS COMPANIES")
-                                                console.log(companies)
-                                                let token = jwt.sign({ id: user.dataValues.id, username: user.dataValues.username }, 'whatever it takes', { expiresIn: 129600 }); // Sigining the token
-                                                res.json({ status: 'success', user: user.dataValues, companyID: companyID, token: token, usersCompanies: companies })
-                                            } else {
-                                                res.json({ status: 'failed', msg: 'Something wrong happened' })
-                                            }
                                         })
                                     }
                                 })
-
-
-
-
-
 
                             }
 
@@ -187,7 +165,7 @@ const createNewUser = async (email, username, password, companyID, response) => 
 
 
         let token = jwt.sign({ id: user.dataValues.id, username: user.dataValues.username }, 'whatever it takes', { expiresIn: 129600 }); // Sigining the token
-        response.json({ status: 'success', user: user.dataValues, companyID: companyID, token: token, usersCompanies: companyID })
+        response.json({ status: 'success', user: user.dataValues, companyID: companyID, token: token, usersCompanies: [companyID] })
 
     } catch (e) {
         console.log(e)
@@ -216,7 +194,10 @@ exports.login = (req, res) => {
                         console.log("!!!!!!!!!!!!!!!!!!")
                         console.log(companies)
                         if (companies) {
-
+                            // Debo convertir usersCompanies a 
+                            companies.map((company) => {
+                                return company.dataValues.companyID
+                            })
                             if (companyID) {
                                 checkIfCompMatch(user.dataValues.id, companyID).then((match) => {
                                     if (match) {
@@ -227,7 +208,7 @@ exports.login = (req, res) => {
                                 })
                             } else {
                                 let token = jwt.sign({ id: user.dataValues.id, username: user.dataValues.username }, 'whatever it takes', { expiresIn: 129600 }); // Sigining the token
-                                res.json({ status: 'success', user: user.dataValues, companyID: companies[0].dataValues.companyID, token: token, usersCompanies: companies })
+                                res.json({ status: 'success', user: user.dataValues, companyID: companies[0], token: token, usersCompanies: companies })
                             }
 
                         } else {
