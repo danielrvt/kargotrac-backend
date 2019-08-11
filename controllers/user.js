@@ -67,20 +67,20 @@ exports.createUser = (req, res) => {
                             if (user.dataValues.password === password) {
                                 // Debo chequear que la compania exista
                                 usersCompanyCont.createUsersCompany(user.dataValues.id, companyID).then((resp) => {
-                                    console.log("Esta es la resssspppp")
-                                    console.log(resp)
+
+                                    findUsersCompanies(user.dataValues.id).then((companies) => {
+                                        console.log(">>>>")
+                                        console.log(companies)
+                                        if (companies) {
+                                            let token = jwt.sign({ id: user.dataValues.id, username: user.dataValues.username }, 'whatever it takes', { expiresIn: 129600 }); // Sigining the token
+                                            res.json({ status: 'success', user: user.dataValues, companyID: companyID, token: token, usersCompanies: companies })
+                                        } else {
+                                            res.json({ status: 'failed', msg: 'Something wrong happened' })
+                                        }
+                                    })
                                 })
 
-                                findUsersCompanies(user.dataValues.id).then((companies) => {
-                                    console.log(">>>>")
-                                    console.log(companies)
-                                    if (companies) {
-                                        let token = jwt.sign({ id: user.dataValues.id, username: user.dataValues.username }, 'whatever it takes', { expiresIn: 129600 }); // Sigining the token
-                                        res.json({ status: 'success', user: user.dataValues, companyID: companyID, token: token, usersCompanies: companies })
-                                    } else {
-                                        res.json({ status: 'failed', msg: 'Something wrong happened' })
-                                    }
-                                })
+
 
 
 
