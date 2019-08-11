@@ -59,9 +59,7 @@ exports.createUser = (req, res) => {
                                     if (!resp) res.json({ status: 'failed', msg: 'Company already associated with user. Go to login' })
                                     else {
                                         findUsersCompanies(user.dataValues.id).then((companies) => {
-                                            companies.map((company) => {
-                                                return company.dataValues.companyID
-                                            })
+                                            
                                             let token = jwt.sign({ id: user.dataValues.id, username: user.dataValues.username }, 'whatever it takes', { expiresIn: 129600 }); // Sigining the token
                                             res.json({ status: 'success', user: user.dataValues, companyID: companyID, token: token, usersCompanies: companies })
 
@@ -163,7 +161,6 @@ const createNewUser = async (email, username, password, companyID, response) => 
         usersCompanyCont.createUsersCompany(user.id, companyID)
 
 
-
         let token = jwt.sign({ id: user.dataValues.id, username: user.dataValues.username }, 'whatever it takes', { expiresIn: 129600 }); // Sigining the token
         response.json({ status: 'success', user: user.dataValues, companyID: companyID, token: token, usersCompanies: [companyID] })
 
@@ -195,9 +192,6 @@ exports.login = (req, res) => {
                         console.log(companies)
                         if (companies) {
                             // Debo convertir usersCompanies a 
-                            companies.map((company) => {
-                                return company.dataValues.companyID
-                            })
                             if (companyID) {
                                 checkIfCompMatch(user.dataValues.id, companyID).then((match) => {
                                     if (match) {
