@@ -205,7 +205,8 @@ exports.login = (req, res) => {
                 if (user.dataValues.password === password) {
 
                     findUsersCompanies(user.dataValues.id).then((companies) => {
-
+                        console.log("!!!!!!!!!!!!!!!!!!")
+                        console.log(companies)
                         if (companies) {
 
                             if (companyID) {
