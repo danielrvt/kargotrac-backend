@@ -40,7 +40,10 @@ exports.createUsersCompany = (userID, companyID) => {
             if(existCompany){
                 return null
             }else{
-                createNewUserCompany(userID, companyID).then((company) => {
+                UsersCompany.create({
+                    userID,
+                    companyID
+                }).then((company)=> {
                     return company
                 })
                 
