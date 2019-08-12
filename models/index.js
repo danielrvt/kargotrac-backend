@@ -14,12 +14,10 @@ console.log(database)
 var sequelize = ""
 
 if (process.env.DATABASE_URL) {
-    sequelize = new Sequelize(database)
+  sequelize = new Sequelize(database)
 }
 else {
-    sequelize = new Sequelize(database, 'mysql', '', {
-        dialect: 'mysql'
-    });
+  sequelize = new Sequelize(config.database, config.username, config.password, config, { dialect: 'mysql' });
 }
 
 fs
