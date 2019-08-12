@@ -6,10 +6,14 @@ module.exports = (sequelize, DataTypes) => {
     cubic_feet_volume: DataTypes.DOUBLE,
     number_of_boxes: DataTypes.INTEGER,
     shipping_way: DataTypes.STRING,
-    status: DataTypes.STRING
+    status: DataTypes.STRING,
+    UserId: DataTypes.INTEGER,
+    CompanyId: DataTypes.INTEGER
   }, {});
   Shipments.associate = function(models) {
     // associations can be defined here
+    Shipments.belongsTo(models.Users, {foreignKey: 'UserId'})
+    Shipments.belongsTo(models.Companies, {foreignKey: 'CompanyId'})
   };
   return Shipments;
 };
