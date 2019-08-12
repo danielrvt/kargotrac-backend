@@ -56,6 +56,7 @@ exports.createUser = (req, res) => {
                             if (user.dataValues.password === password) {
                                 // Debo chequear que la compania exista
                                 usersCompanyCont.createUsersCompany(user.dataValues.id, companyID).then((resp) => {
+                                    console.log(resp)
                                     if (!resp) res.json({ status: 'failed', msg: 'Company already associated with user. Go to login' })
                                     else {
                                         // Debo buscar la compania que agregue para hacerle push a userscompanies
