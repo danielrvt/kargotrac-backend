@@ -161,11 +161,13 @@ const createNewUser = async (email, username, password, companyID, response) => 
 
             password
         })
-        usersCompanyCont.createUsersCompany(user.id, companyID)
+        usersCompanyCont.createUsersCompany(user.id, companyID).then((company) => {
+            let token = jwt.sign({ id: user.dataValues.id, username: user.dataValues.username }, 'whatever it takes', { expiresIn: 129600 }); // Sigining the token
+            response.json({ status: 'success', user: user.dataValues, companyID: companyID, token: token, usersCompanies: company })
+        })
 
 
-        let token = jwt.sign({ id: user.dataValues.id, username: user.dataValues.username }, 'whatever it takes', { expiresIn: 129600 }); // Sigining the token
-        response.json({ status: 'success', user: user.dataValues, companyID: companyID, token: token, usersCompanies: [companyID] })
+
 
     } catch (e) {
         console.log(e)
