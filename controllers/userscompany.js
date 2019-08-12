@@ -36,7 +36,8 @@ const createNewUserCompany = (userID, companyID) => {
 /*Esta funcion es el controlador de llamadas para hacer el proceso de agregar un nuevo usersCompany */
 exports.createUsersCompany = (userID, companyID) => {
 
-        return Promise.all(searchUserID(userID, companyID).then((existCompany)=>{
+        return (searchUserID(userID, companyID).then((existCompany)=>{
+            console.log(existCompany)
             if(existCompany){
                 return null
             }else{
