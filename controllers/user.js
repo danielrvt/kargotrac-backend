@@ -61,7 +61,8 @@ exports.createUser = (req, res) => {
                                     else {
                                         // Debo buscar la compania que agregue para hacerle push a userscompanies
                                         findUsersCompanies(user.dataValues.id).then((companies) => {
-                                            console.log(resp)
+                                            console.log("Companies")
+                                            console.log(companies)
                                             let token = jwt.sign({ id: user.dataValues.id, username: user.dataValues.username }, 'whatever it takes', { expiresIn: 129600 }); // Sigining the token
                                             res.json({ status: 'success', user: user.dataValues, companyID: companyID, token: token, usersCompanies: companies })
 
