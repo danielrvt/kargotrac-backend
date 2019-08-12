@@ -58,8 +58,9 @@ exports.createUser = (req, res) => {
                                 usersCompanyCont.createUsersCompany(user.dataValues.id, companyID).then((resp) => {
                                     if (!resp) res.json({ status: 'failed', msg: 'Company already associated with user. Go to login' })
                                     else {
+                                        // Debo buscar la compania que agregue para hacerle push a userscompanies
                                         findUsersCompanies(user.dataValues.id).then((companies) => {
-                                            
+                                            console.log(resp)
                                             let token = jwt.sign({ id: user.dataValues.id, username: user.dataValues.username }, 'whatever it takes', { expiresIn: 129600 }); // Sigining the token
                                             res.json({ status: 'success', user: user.dataValues, companyID: companyID, token: token, usersCompanies: companies })
 

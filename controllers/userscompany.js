@@ -29,6 +29,8 @@ const createNewUserCompany = async (userID, companyID) => {
         const user = await UsersCompany.create({
             userID,
             companyID
+        }).then((company) => {
+            return company
         })
     } catch (e) {
         console.log(e);
@@ -42,8 +44,10 @@ exports.createUsersCompany = (userID, companyID) => {
             if(existCompany){
                 return null
             }else{
-                createNewUserCompany(userID, companyID)
-                return companyID
+                createNewUserCompany(userID, companyID).then((companyAdded) => {
+                    return companyAdded
+                })
+                
             }
 
         }))
