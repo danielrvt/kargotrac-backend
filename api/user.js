@@ -2,6 +2,7 @@
 const userController = require('../controllers/user')
 const itemController = require('../controllers/item')
 const companyController = require('../controllers/company')
+const shipmentController = require('../controllers/shipment')
 const express = require('express')
 const router = express.Router()
 const { body } = require('express-validator/check')
@@ -71,6 +72,11 @@ router.patch(
 router.delete(
     '/items',
     itemController.deleteItems
+)
+
+router.post(
+    '/shipments',
+    shipmentController.createShipments
 )
 //enable pre-flight
 router.options("*", cors(options));
