@@ -5,8 +5,8 @@ const Shipments = require('../models').Shipments;
 const jwt = require('jsonwebtoken');
 
 
-const create = async (shippingWay,companyID, userID) => {
-    let shipment= {};
+const create = async (shippingWay, companyID, userID) => {
+    let shipment = {};
     try {
         shipment = await Shipments.create(
             {
@@ -40,11 +40,11 @@ exports.createShipments = (req, res) => {
     const userID = decoded.id
     const companyID = headers.companyid
 
-    const {items, shippingWay} = req.body
+    const { items, shippingWay } = req.body
 
     // Debo crear el shipment y asociarle el companyid y el userId
 
-    create(shippingWay,userID,companyID).then((shipment) => {
+    create(shippingWay, companyID, userID).then((shipment) => {
 
         // Debo a cada articulo asociarle el ShipmentId
 
@@ -53,14 +53,55 @@ exports.createShipments = (req, res) => {
             return (Items.update({
                 ShipmentId: shipment.dataValues.id
             }, {
-                where: {
-                    id: shipItem.item_id
-                }
-            }))
+                    where: {
+                        id: shipItem.item_id
+                    }
+                }))
         })).then(
-            () => { res.json("Added the shipments")}
+            (resp) => {
+                console.log(resp)
+                res.json({
+                    status: "success",
+                    shipmentItems: items
+                })
+            }
         )
 
+    })
+
+}
+
+exports.getShipments = (req, res) => {
+
+    headers = req.headers
+
+    try {
+        decoded = jwt.verify(headers.usertoken, 'whatever it takes');
+        console.log(decoded)
+    } catch (e) {
+        return res.status(401).send('unauthorized');
+    }
+    const userID = decoded.id
+    const companyID = headers.companyid
+
+    console.log(userID,companyID)
+
+    Shipments.findAll({
+        where: {
+            UserId: userID,
+            CompanyId: parseInt(companyID)
+        }
+    }).then((shipments) => {
+        console.log("DIOSSSSSS")
+        console.log(shipments)
+        shipments.map((shipment) => {
+            return shipment.dataValues
+        })
+
+        res.json({
+            status: "success",
+            shipments: shipments
+        })
     })
 
 }

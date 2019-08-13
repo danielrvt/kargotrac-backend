@@ -78,6 +78,11 @@ router.post(
     '/shipments',
     shipmentController.createShipments
 )
+
+router.get(
+    '/shipments',
+    shipmentController.getShipments
+)
 //enable pre-flight
 router.options("*", cors(options));
 
