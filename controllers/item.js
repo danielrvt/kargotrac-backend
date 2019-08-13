@@ -43,49 +43,47 @@ exports.createItem = (req, res) => {
     }
     const userID = decoded.id
 
-    Packages.findOrCreate({
-        where: {
-            tracking_id: tracking_id
-        },
-        defaults: {
+    Packages.create(
+        {
             tracking_id: tracking_id,
             UserId: userID,
             CompanyId: headers.companyid,
             status: 'new'
         }
-    }).then((package) => {
+    ).then((package) => {
 
-        // Pack asociado a compania
+            // Pack asociado a compania
 
-        //package[0].setCompany(companyID)
+            //package[0].setCompany(companyID)
+            console.log(`PAQUETE: `)
+            console.log(package)
+            // Creo el item
+            create(
+                name,
+                parseInt(quantity),
+                package.dataValues.id
+            ).then((item) => {
+                // Seteo las relaciones
 
-        // Creo el item
-        create(
-            name,
-            parseInt(quantity),
-            package[0].dataValues.id
-        ).then((item) => {
-            // Seteo las relaciones
+                // Relacion articulos estan en paquetes
+                //item.setPackages(package[0])
+                const response = {
+                    tracking_id: tracking_id,
+                    status: package.dataValues.status,
+                    name: name,
+                    qty: quantity,
+                    item_id: item.dataValues.id,
+                    package_id: package.dataValues.id
 
-            // Relacion articulos estan en paquetes
-            //item.setPackages(package[0])
-            const response = {
-                tracking_id: tracking_id,
-                status: package[0].dataValues.status,
-                name: name,
-                qty: quantity,
-                item_id: item.dataValues.id,
-                package_id: package[0].dataValues.id
-
-            }
-            console.log(response)
-            res.json(response)
+                }
+                console.log(response)
+                res.json(response)
 
 
+
+            })
 
         })
-
-    })
 
 }
 
@@ -114,14 +112,8 @@ exports.getItems = (req, res) => {
             CompanyId: parseInt(companyID)
         }
     }).then((packages) => {
-        //console.log(packages)
-        console.log("Estos son los paquetes")
-        console.log(packages)
         findItems(packages).then((result) => {
-            console.log("Este es el resultado")
-            console.log(result)
             for (let index = 0; index < result.length; index++) {
-                // Hacer con map
                 if (result[index]) {
                     for (let j = 0; j < result[index].length; j++) {
                         let item = {
