@@ -105,3 +105,127 @@ const findQtyItems = (package) => {
     })
 
 }
+
+exports.editPackage = (req, res) => {
+
+    const headers = req.headers
+
+    try {
+        decoded = jwt.verify(headers.usertoken, 'whatever it takes');
+        console.log(decoded)
+    } catch (e) {
+        return res.status(401).send('unauthorized');
+    }
+    const userID = decoded.id
+    const companyID = headers.companyid
+
+    const {old_tracking_id, new_tracking_id, old_seller, new_seller} = req.body
+
+    // CASO 1: old_tracking_id !== new_tracking_id && old_seller !== new_seller
+    console.log(old_tracking_id, new_tracking_id, old_seller, new_seller)
+    if(old_tracking_id !== new_tracking_id && old_seller !== new_seller){
+
+        Packages.findAll({
+            where: {
+                tracking_id: old_tracking_id
+            }
+        }).then((packages) => {
+
+            let resultPromise = packages.forEach((package) => {
+
+                Packages.update(
+                    {
+                        tracking_id: new_tracking_id,
+                        seller: new_seller
+                    
+                    },
+                    {where: {
+                        id: package.dataValues.id
+                    }}
+                )
+
+
+            })
+            Promise.all(resultPromise).then(() => {
+                res.json({
+                    status: "success",
+                    package: {
+                        tracking_id: new_tracking_id,
+                        seller: new_seller
+                    }
+                })
+            })
+        })
+    }else if(old_tracking_id !== new_tracking_id){
+
+        Packages.findAll({
+            where: {
+                tracking_id: old_tracking_id
+            }
+        }).then((packages) => {
+
+            let resultPromise = packages.forEach((package) => {
+
+                Packages.update(
+                    {
+                        tracking_id: new_tracking_id,
+                    
+                    },
+                    {where: {
+                        id: package.dataValues.id
+                    }}
+                )
+
+
+            })
+            Promise.all(resultPromise).then(() => {
+                res.json({
+                    status: "success",
+                    package: {
+                        tracking_id: new_tracking_id,
+                        seller: old_seller
+                    }
+                })
+            })
+        })
+    }else if(old_seller !== new_seller){
+
+        Packages.findAll({
+            where: {
+                tracking_id: old_tracking_id
+            }
+        }).then((packages) => {
+
+            let resultPromise = packages.forEach((package) => {
+
+                Packages.update(
+                    {
+                        seller: new_seller
+                    
+                    },
+                    {where: {
+                        id: package.dataValues.id
+                    }}
+                )
+
+
+            })
+            Promise.all(resultPromise).then(() => {
+                res.json({
+                    status: "success",
+                    package: {
+                        tracking_id: old_tracking_id,
+                        seller: new_seller
+                    }
+                })
+            })
+        })
+    }
+    res.json({
+        status: "success"
+    })
+
+
+
+
+} 

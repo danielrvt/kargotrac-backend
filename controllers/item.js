@@ -47,7 +47,7 @@ exports.createItem = (req, res) => {
             tracking_id: tracking_id,
             UserId: userID,
             CompanyId: headers.companyid,
-            status: 'new'
+            status: 'PENDIENTE'
         }
     ).then((package) => {
 
@@ -142,22 +142,67 @@ exports.getItems = (req, res) => {
     })
 
 }
-const formatItems = (shipmentId, itemsList) => {
-    let list = itemsList
-    itemsList.forEach((item, index) => {
 
-        if(item.ShipmentId !== shipmentId ){
-            let deletedItem = item
-            list.splice(index, 1)
-            list.push(item)
+exports.getPackageItems = (req, res) => {
 
+
+    headers = req.headers
+    //var items = []
+    // Chequeo autorizacion
+
+    try {
+        decoded = jwt.verify(headers.usertoken, 'whatever it takes');
+        console.log(decoded)
+    } catch (e) {
+        return res.status(401).send('unauthorized');
+    }
+
+    const userID = decoded.id
+    const companyID = headers.companyid
+    const tracking_id = headers.trackingid
+    console.log(req.data)
+    Packages.findOne({
+        where: {
+            tracking_id: tracking_id
         }
-    })
-    return itemsList
-}
-exports.getFormatedItems = (req, res) => {
+    }).then((package) => {
+        let pck = [package]
+        let packageItems = []
+        findItems(pck).then((result) => {
+            console.log("Result")
+            console.log(result[0])
+            let items = result[0]
+            items.map((item) => {
+                console.log(item)
+                const itemToAdd = {
+                    tracking_id: package.dataValues.tracking_id,
+                    status: package.dataValues.status,
+                    name: item.dataValues.name,
+                    qty: item.dataValues.quantity,
+                    item_id: item.dataValues.id,
+                    package_id: package.dataValues.id,
+                    ShipmentId: item.dataValues.ShipmentId
+                }
+                packageItems.push(itemToAdd)
+                
+            })
 
-} 
+            console.log("AQUI LOS ART")
+            console.log(packageItems)
+            const response = {
+                status: "success",
+                package: package.dataValues,
+                items: packageItems
+            }
+            res.json(response)
+        })
+
+
+
+    })
+}
+
+
 // Creo que funciona
 // Cuando le doy a agregar debe cerrar el modal
 const findItems = (packages) => {

@@ -94,6 +94,16 @@ router.patch(
     '/shipments/edit',
     shipmentController.editShipment
 )
+
+router.get(
+    '/packages/items',
+    itemController.getPackageItems
+)
+
+router.patch(
+    '/packages/edit',
+    packageController.editPackage
+)
 //enable pre-flight
 router.options("*", cors(options));
 
