@@ -92,16 +92,119 @@ exports.getShipments = (req, res) => {
             CompanyId: parseInt(companyID)
         }
     }).then((shipments) => {
-        console.log("DIOSSSSSS")
-        console.log(shipments)
-        shipments.map((shipment) => {
-            return shipment.dataValues
+
+        let ship_id = []
+
+        let promises_ship = shipments.map( async ship => {
+
+            await findQtyItems(ship).then((items_qty) => {
+
+                let shipment = {
+                    id: ship.dataValues.id,
+                    creation_date: ship.dataValues.createdAt.toLocaleDateString(),
+                    qty: items_qty,
+                    status: ship.dataValues.status,
+                    shipping_way: ship.dataValues.shipping_way
+                }
+                ship_id.push(shipment)
+            })
+
+
+
         })
 
-        res.json({
-            status: "success",
-            shipments: shipments
+        Promise.all(promises_ship).then((s) => {
+            console.log("PAQUETE FINAL")
+            console.log("Shipment set")
+            console.log(ship_id)
+
+            res.json({
+                status: "success",
+                shipments: ship_id
+            })
+        })
+        
+    })
+
+}
+
+
+const findQtyItems = (shipment) => {
+    //let items = []
+    return (Items.findAll({
+        where: {
+            ShipmentId: shipment.dataValues.id
+        }
+    })).then((result) => {
+        let total = 0
+        result.forEach((item) => {
+            total = total + item.dataValues.quantity
+        })
+        return total
+
+    })
+
+}
+
+exports.editShipment = (req, res) => {
+
+
+    try {
+        decoded = jwt.verify(headers.usertoken, 'whatever it takes');
+        console.log(decoded)
+    } catch (e) {
+        return res.status(401).send('unauthorized');
+    }
+    const userID = decoded.id
+    const companyID = headers.companyid
+
+    const {selectedItems, deselectedItems, ShipmentId} = req.body
+
+    let promiseSelected = selectedItems.map((item) => {
+        Items.findOne({
+            where: {
+                id: item.item_id
+            }
+        }).then((itemFound) => {
+
+            if(itemFound.dataValues.ShipmentId !== parseInt(ShipmentId)){
+                Items.update({
+                    ShipmentId: ShipmentId
+                }, {
+                    where: {
+                        id: itemFound.dataValues.id
+                    }
+                })
+            }
         })
     })
 
+    let promiseDeselected = deselectedItems.map((item) => {
+
+        Items.findOne({
+            where: {
+                id: item.item_id
+            }
+        }).then((itemFound) => {
+            if(itemFound.dataValues.ShipmentId === parseInt(ShipmentId)){
+                Items.update({
+                    ShipmentId: null
+                }, {
+                    where: {
+                        id: itemFound.dataValues.id
+                    }
+                })
+            }
+        })
+    })
+
+    Promise.all([promiseSelected, promiseDeselected]).then(() => {
+        res.json({
+            status: "success",
+            ShipmentId: ShipmentId
+        })
+    })
+    //  Lo busco con el id y pregunto si los datos son distintos a los nuevos,
+    // si es asi, entonces edito Shipments.update
+    //const {id, }
 }

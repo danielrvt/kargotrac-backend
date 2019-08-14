@@ -3,6 +3,7 @@ const userController = require('../controllers/user')
 const itemController = require('../controllers/item')
 const companyController = require('../controllers/company')
 const shipmentController = require('../controllers/shipment')
+const packageController = require('../controllers/package')
 const express = require('express')
 const router = express.Router()
 const { body } = require('express-validator/check')
@@ -82,6 +83,16 @@ router.post(
 router.get(
     '/shipments',
     shipmentController.getShipments
+)
+
+router.get(
+    '/packages',
+    packageController.getPackages
+)
+
+router.patch(
+    '/shipments/edit',
+    shipmentController.editShipment
 )
 //enable pre-flight
 router.options("*", cors(options));

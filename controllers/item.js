@@ -42,7 +42,6 @@ exports.createItem = (req, res) => {
         return res.status(401).send('unauthorized');
     }
     const userID = decoded.id
-
     Packages.create(
         {
             tracking_id: tracking_id,
@@ -122,7 +121,8 @@ exports.getItems = (req, res) => {
                             name: result[index][j].dataValues.name,
                             qty: result[index][j].dataValues.quantity,
                             item_id: result[index][j].dataValues.id,
-                            package_id: packages[index].dataValues.id
+                            package_id: packages[index].dataValues.id,
+                            ShipmentId: result[index][j].ShipmentId
                         }
                         items.push(item)
 
@@ -142,7 +142,22 @@ exports.getItems = (req, res) => {
     })
 
 }
+const formatItems = (shipmentId, itemsList) => {
+    let list = itemsList
+    itemsList.forEach((item, index) => {
 
+        if(item.ShipmentId !== shipmentId ){
+            let deletedItem = item
+            list.splice(index, 1)
+            list.push(item)
+
+        }
+    })
+    return itemsList
+}
+exports.getFormatedItems = (req, res) => {
+
+} 
 // Creo que funciona
 // Cuando le doy a agregar debe cerrar el modal
 const findItems = (packages) => {
