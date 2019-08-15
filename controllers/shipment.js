@@ -83,49 +83,88 @@ exports.getShipments = (req, res) => {
     }
     const userID = decoded.id
     const companyID = headers.companyid
+    const isCompany = headers.iscompany
 
-    console.log(userID,companyID)
+    console.log(userID, companyID)
+    if (!isCompany) {
+        Shipments.findAll({
+            where: {
+                UserId: userID,
+                CompanyId: parseInt(companyID)
+            }
+        }).then((shipments) => {
 
-    Shipments.findAll({
-        where: {
-            UserId: userID,
-            CompanyId: parseInt(companyID)
-        }
-    }).then((shipments) => {
+            let ship_id = []
 
-        let ship_id = []
+            let promises_ship = shipments.map(async ship => {
 
-        let promises_ship = shipments.map( async ship => {
+                await findQtyItems(ship).then((items_qty) => {
 
-            await findQtyItems(ship).then((items_qty) => {
+                    let shipment = {
+                        id: ship.dataValues.id,
+                        creation_date: ship.dataValues.createdAt.toLocaleDateString(),
+                        qty: items_qty,
+                        status: ship.dataValues.status,
+                        shipping_way: ship.dataValues.shipping_way
+                    }
+                    ship_id.push(shipment)
+                })
 
-                let shipment = {
-                    id: ship.dataValues.id,
-                    creation_date: ship.dataValues.createdAt.toLocaleDateString(),
-                    qty: items_qty,
-                    status: ship.dataValues.status,
-                    shipping_way: ship.dataValues.shipping_way
-                }
-                ship_id.push(shipment)
+
+
             })
 
+            Promise.all(promises_ship).then((s) => {
+                console.log("PAQUETE FINAL")
+                console.log("Shipment set")
+                console.log(ship_id)
 
+                res.json({
+                    status: "success",
+                    shipments: ship_id
+                })
+            })
+
+        })
+    } else {
+        Shipments.findAll({
+            where: {
+                CompanyId: parseInt(companyID)
+            }
+        }).then((shipments) => {
+
+            let ship_id = []
+
+            let promises_ship = shipments.map(async ship => {
+
+                await findQtyItems(ship).then((items_qty) => {
+
+                    let shipment = {
+                        id: ship.dataValues.id,
+                        creation_date: ship.dataValues.createdAt.toLocaleDateString(),
+                        qty: items_qty,
+                        status: ship.dataValues.status,
+                        shipping_way: ship.dataValues.shipping_way
+                    }
+                    ship_id.push(shipment)
+                })
+
+            })
+
+            Promise.all(promises_ship).then((s) => {
+                console.log("PAQUETE FINAL")
+                console.log("Shipment set")
+                console.log(ship_id)
+
+                res.json({
+                    status: "success",
+                    shipments: ship_id
+                })
+            })
 
         })
 
-        Promise.all(promises_ship).then((s) => {
-            console.log("PAQUETE FINAL")
-            console.log("Shipment set")
-            console.log(ship_id)
-
-            res.json({
-                status: "success",
-                shipments: ship_id
-            })
-        })
-        
-    })
-
+    }
 }
 
 
@@ -146,6 +185,24 @@ const findQtyItems = (shipment) => {
 
 }
 
+exports.getSingleShipment = (req, res) => {
+    headers = req.headers
+    try {
+        decoded = jwt.verify(headers.usertoken, 'whatever it takes');
+        console.log(decoded)
+    } catch (e) {
+        return res.status(401).send('unauthorized');
+    }
+    Shipments.findOne({
+        where: {
+            id: parseInt(headers.id)
+        }
+    }).then((shipment) => {
+        res.json({
+            shipment: shipment.dataValues
+        })
+    })
+}
 exports.editShipment = (req, res) => {
 
 
@@ -157,24 +214,26 @@ exports.editShipment = (req, res) => {
     }
     const userID = decoded.id
     const companyID = headers.companyid
+    const isCompany = headers.iscompany
+    const { selectedItems, deselectedItems, ShipmentId, companyEdits } = req.body
 
-    const {selectedItems, deselectedItems, ShipmentId} = req.body
 
-    let promiseSelected = selectedItems.map((item) => {
+    if(!isCompany)
+    {let promiseSelected = selectedItems.map((item) => {
         Items.findOne({
             where: {
                 id: item.item_id
             }
         }).then((itemFound) => {
 
-            if(itemFound.dataValues.ShipmentId !== parseInt(ShipmentId)){
+            if (itemFound.dataValues.ShipmentId !== parseInt(ShipmentId)) {
                 Items.update({
                     ShipmentId: ShipmentId
                 }, {
-                    where: {
-                        id: itemFound.dataValues.id
-                    }
-                })
+                        where: {
+                            id: itemFound.dataValues.id
+                        }
+                    })
             }
         })
     })
@@ -186,14 +245,14 @@ exports.editShipment = (req, res) => {
                 id: item.item_id
             }
         }).then((itemFound) => {
-            if(itemFound.dataValues.ShipmentId === parseInt(ShipmentId)){
+            if (itemFound.dataValues.ShipmentId === parseInt(ShipmentId)) {
                 Items.update({
                     ShipmentId: null
                 }, {
-                    where: {
-                        id: itemFound.dataValues.id
-                    }
-                })
+                        where: {
+                            id: itemFound.dataValues.id
+                        }
+                    })
             }
         })
     })
@@ -203,7 +262,64 @@ exports.editShipment = (req, res) => {
             status: "success",
             ShipmentId: ShipmentId
         })
-    })
+    })}
+    else {
+        Shipments.findOne({
+            where: {
+                id: parseInt(ShipmentId)
+            }
+        }).then((shipment) => {
+            if(shipment.status !== companyEdits.status){
+                Shipments.update({
+                    lbs_weight: parseFloat(companyEdits.lbs_weight)
+                }, {
+                    where: {
+                        id: shipment.dataValues.id
+                    }
+                })
+            }
+            if(parseFloat(shipment.lbs_weight) !== parseFloat(companyEdits.lbs_weight)){
+                Shipments.update({
+                    lbs_weight: parseFloat(companyEdits.lbs_weight)
+                }, {
+                    where: {
+                        id: shipment.dataValues.id
+                    }
+                })
+            }
+            if(parseFloat(shipment.pvl_weight) !== parseFloat(companyEdits.pvl_weight)){
+                Shipments.update({
+                    pvl_weight: parseFloat(companyEdits.pvl_weight)
+                }, {
+                    where: {
+                        id: shipment.dataValues.id
+                    }
+                })
+            }
+            if(parseFloat(shipment.cubic_feet_volume) !== parseFloat(companyEdits.cubic_feet_volume)){
+                Shipments.update({
+                    cubic_feet_volume: parseFloat(companyEdits.cubic_feet_volume)
+                }, {
+                    where: {
+                        id: shipment.dataValues.id
+                    }
+                })
+            }
+            if(parseInt(shipment.number_of_boxes) !== parseInt(companyEdits.number_of_boxes)){
+                Shipments.update({
+                    number_of_boxes: parseInt(companyEdits.number_of_boxes)
+                }, {
+                    where: {
+                        id: shipment.dataValues.id
+                    }
+                })
+            }
+            res.json({
+                status: "success",
+                shipmentValues: companyEdits
+            })
+        })
+    }
     //  Lo busco con el id y pregunto si los datos son distintos a los nuevos,
     // si es asi, entonces edito Shipments.update
     //const {id, }

@@ -97,21 +97,6 @@ exports.createUser = (req, res) => {
 
 
 
-/*
-DESCRIPTION: finds if email exists, if exists then calls next ==> next checks if email and password match in db
-if does not exist then calls createNewUser and continues 
- */
-/*
-CASO BASE: el email es unico (no existe en la bd) => Agrego ***************LISTO**************
-                                                            1) El usuario en la base de datos
-                                                            2) El usuario + comania en la relacion usersCompanies
-CASO 1: el email existe y coincide con la contrasena en la BD => 
-                                                            1) Agrego en la tabla usersCompany que ya maneja que el usuario ya
-                                                            tenga esa compania. Si no esta enviar response de que ya posee la compania
-CASO 2: el email existe pero la contrasena no coincide con la bd => 
-                                                            1) Enviar response que diga eso
-
- */
 
 /* Esta funcion chequea si existe el email, sino continua con agregar un nuevo usuario */
 const checkifExistEmail = (email) => {
@@ -140,11 +125,9 @@ const checkIfExistUsername = (username) => {
         }
     })).then(function (user) {
 
-        if (user.length > 0) // Aqui debo manejar que si el email y contrasena coinciden, entonces le agrego el companyID
+        if (user.length > 0)
             return { exist: true, user: user[0] }
         else return { exist: false, user: null }
-        // Falta probar agregando una nueva empresa
-        // Debo agregarle el response a la empresa
 
 
     })
@@ -196,7 +179,6 @@ exports.login = (req, res) => {
                         console.log("!!!!!!!!!!!!!!!!!!")
                         console.log(companies)
                         if (companies) {
-                            // Debo convertir usersCompanies a 
                             if (companyID) {
                                 checkIfCompMatch(user.dataValues.id, companyID).then((match) => {
                                     if (match) {
@@ -239,7 +221,7 @@ const checkIfCompMatch = (userID, companyID) => {
     return (usersCompany.findAll({
         where: {
             userID: userID,
-            companyID: companyID
+            companyID: parseInt(companyID)
         }
     })).then(function (user) {
 
@@ -283,12 +265,7 @@ exports.editUser = (req, res) => {
     let addressUpdated = false;
     let phone1Updated = false;
     let phone2Updated = false;
-    console.log('Estos son los upt')
-    console.log(updates)
-    console.log(token.usertoken)
-    //res.json({ status: 'success', user: null, companyID: null, token: token })
-    console.log('COMPANY ID')
-    console.log(token.companyid)
+
     try {
         decoded = jwt.verify(token.usertoken, 'whatever it takes');
         console.log(decoded)
@@ -296,35 +273,111 @@ exports.editUser = (req, res) => {
         return res.status(401).send('unauthorized');
     }
     const userID = decoded.id
-    User.findOne({ where: { id: userID } }).then(function (user) {
-        if (updates.address && updates.address.length > 0) {
-            addressUpdated = true
-            User.update(
-                { address: updates.address },
-                { where: { id: userID } }
-            ).then(() => { console.log('address updated') })
-        }
-        if (updates.phone1 && updates.phone1.length > 0) {
-            phone1Updated = true;
-            User.update(
-                { phone1: updates.phone1 },
-                { where: { id: userID } }
-            ).then(() => { console.log('phone1 updated') })
-        }
-        if (updates.phone2 && updates.phone2.length > 0) {
-            phone2Updated = true
-            User.update(
-                { phone2: updates.phone2 },
-                { where: { id: userID } }
-            ).then(() => { console.log('phone2 updated') })
-        }
-        //window.alert(user)
-        //return res.json(user);
-        console.log('Este es el usuario actualizado')
-        console.log(user)
-        res.json({ status: 'success', user: user.dataValues, companyID: token.companyid, token: token.usertoken })
-        //res.json(user)
-    }, function (e) { res.json(e) });
+    const isCompany = token.iscompany
+    const companyID = token.companyid
+    console.log(updates)
+    if (!isCompany) {
+        User.findOne({ where: { id: userID } }).then(function (user) {
+            if (updates.address !== user.dataValues.address) {
+                addressUpdated = true
+                User.update(
+                    { address: updates.address },
+                    { where: { id: userID } }
+                ).then(() => { console.log('address updated') })
+            }
+            if (updates.phone1 !== user.dataValues.phone1) {
+                phone1Updated = true;
+                User.update(
+                    { phone1: updates.phone1 },
+                    { where: { id: userID } }
+                ).then(() => { console.log('phone1 updated') })
+            }
+            if (updates.phone2 !== user.dataValues.phone2) {
+                phone2Updated = true
+                User.update(
+                    { phone2: updates.phone2 },
+                    { where: { id: userID } }
+                ).then(() => { console.log('phone2 updated') })
+            }
+            //window.alert(user)
+            //return res.json(user);
+            console.log('Este es el usuario actualizado')
+            console.log(user)
+            res.json({ status: 'success', user: user.dataValues, companyID: token.companyid, token: token.usertoken })
+            //res.json(user)
+        }, function (e) { res.json(e) });
+    } else {
+        Company.findOne({
+            where: {
+                id: companyID
+            }
+        }).then((company) => {
+
+            if (updates.address !== company.dataValues.address) {
+                addressUpdated = true
+                Company.update(
+                    { address: updates.address },
+                    { where: { id: companyID } }
+                ).then(() => { console.log('address updated') })
+            }
+            if (updates.phone1 !== company.dataValues.phone) {
+                phone1Updated = true;
+                Company.update(
+                    { phone1: updates.phone1 },
+                    { where: { id: companyID } }
+                ).then(() => { console.log('phone1 updated') })
+            }
+            if (updates.logo !== company.dataValues.logo) {
+                phone1Updated = true;
+                Company.update(
+                    { logo: updates.logo },
+                    { where: { id: companyID } }
+                ).then(() => { console.log('phone1 updated') })
+            }
+            if (updates.primary_color !== company.dataValues.primary_color) {
+                phone1Updated = true;
+                Company.update(
+                    { primary_color: updates.primary_color },
+                    { where: { id: companyID } }
+                ).then(() => { console.log('phone1 updated') })
+            }
+            if (updates.secondary_color !== company.dataValues.secondary_color) {
+                phone1Updated = true;
+                Company.update(
+                    { secondary_color: updates.secondary_color },
+                    { where: { id: companyID } }
+                ).then(() => { console.log('phone1 updated') })
+            }
+            if (updates.pvl_factor && parseFloat(updates.pvl_factor) !== company.dataValues.pvl_factor) {
+                phone1Updated = true;
+                Company.update(
+                    { pvl_factor : parseFloat(updates.pvl_factor)  },
+                    { where: { id: companyID } }
+                ).then(() => { console.log('phone1 updated') })
+            }
+            if (updates.maritime_cubic_feet_price && parseFloat(updates.maritime_cubic_feet_price) !== company.dataValues.maritime_cubic_feet_price) {
+                phone1Updated = true;
+                Company.update(
+                    { maritime_cubic_feet_price : parseFloat(updates.maritime_cubic_feet_price)  },
+                    { where: { id: companyID } }
+                ).then(() => { console.log('phone1 updated') })
+            }
+            if (updates.air_pound_price && parseFloat(updates.air_pound_price) !== company.dataValues.air_pound_price) {
+                phone1Updated = true;
+                Company.update(
+                    { air_pound_price : parseFloat(updates.air_pound_price)  },
+                    { where: { id: companyID } }
+                ).then(() => { console.log('phone1 updated') })
+            }
+            
+
+            console.log('Este es el usuario actualizado')
+           // console.log(user)
+            res.json({ status: 'success', user: company.dataValues, companyID: token.companyid, token: token.usertoken })
+
+        })
+    }
+
 
 }
 
@@ -356,12 +409,24 @@ exports.getUser = (req, res) => {
         return res.status(401).send('unauthorized');
     }
     const userID = decoded.id
-    console.log(userID)
-    User.findOne({ where: { id: userID } }).then(function (user) {
-        console.log('Este es el usuario')
-        console.log(user)
-        res.json({ status: 'success', user: user.dataValues, companyID: token.companyid, token: token.usertoken })
-    });
+    const isCompany = token.iscompany
+    if(!isCompany){
+        console.log(userID)
+        User.findOne({ where: { id: userID } }).then(function (user) {
+            console.log('Este es el usuario')
+            console.log(user)
+            res.json({ status: 'success', user: user.dataValues, companyID: token.companyid, token: token.usertoken })
+        });
+    
+    }else{
+        Company.findOne({
+            where: {
+                id: token.companyid
+            }
+        }).then((company) => {
+            res.json({ status: 'success', user: company.dataValues ,token: token.usertoken })
+        })
+    }
 
 }
 

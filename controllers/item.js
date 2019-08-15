@@ -102,10 +102,11 @@ exports.getItems = (req, res) => {
     console.log(headers)
     const userID = decoded.id
     const companyID = headers.companyid
+    const isCompany = headers.iscompany
     console.log('*****este es el usuariooooooo')
     console.log(userID)
-
-    Packages.findAll({
+    if(!isCompany)
+    {Packages.findAll({
         where: {
             UserId: userID,
             CompanyId: parseInt(companyID)
@@ -139,7 +140,43 @@ exports.getItems = (req, res) => {
 
 
 
-    })
+    })}
+    else {
+        Packages.findAll({
+            where: {
+                CompanyId: parseInt(companyID)
+            }
+        }).then((packages) => {
+            findItems(packages).then((result) => {
+                for (let index = 0; index < result.length; index++) {
+                    if (result[index]) {
+                        for (let j = 0; j < result[index].length; j++) {
+                            let item = {
+                                tracking_id: packages[index].dataValues.tracking_id,
+                                status: packages[index].dataValues.status,
+                                name: result[index][j].dataValues.name,
+                                qty: result[index][j].dataValues.quantity,
+                                item_id: result[index][j].dataValues.id,
+                                package_id: packages[index].dataValues.id,
+                                ShipmentId: result[index][j].ShipmentId
+                            }
+                            items.push(item)
+    
+    
+                        }
+    
+                    }
+    
+                }
+                console.log("ITEMS")
+                console.log(items)
+                res.json(items)
+            })
+    
+    
+    
+        })
+    }
 
 }
 
