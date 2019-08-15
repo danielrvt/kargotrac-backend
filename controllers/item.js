@@ -103,9 +103,12 @@ exports.getItems = (req, res) => {
     const userID = decoded.id
     const companyID = headers.companyid
     const isCompany = headers.iscompany
+    console.log("IS COMPANY")
+    console.log(isCompany)
+    console.log(companyID)
     console.log('*****este es el usuariooooooo')
     console.log(userID)
-    if(!isCompany)
+    if(isCompany === 'false')
     {Packages.findAll({
         where: {
             UserId: userID,

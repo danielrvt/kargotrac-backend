@@ -84,9 +84,11 @@ exports.getShipments = (req, res) => {
     const userID = decoded.id
     const companyID = headers.companyid
     const isCompany = headers.iscompany
-
+    console.log(!isCompany)
     console.log(userID, companyID)
-    if (!isCompany) {
+    if (isCompany === 'false') {
+        console.log("!!!!!!!!!!!!!!!!!!!!!1")
+        console.log("No soy company id")
         Shipments.findAll({
             where: {
                 UserId: userID,
@@ -127,6 +129,7 @@ exports.getShipments = (req, res) => {
 
         })
     } else {
+        console.log("????????????????????????")
         Shipments.findAll({
             where: {
                 CompanyId: parseInt(companyID)
@@ -216,9 +219,10 @@ exports.editShipment = (req, res) => {
     const companyID = headers.companyid
     const isCompany = headers.iscompany
     const { selectedItems, deselectedItems, ShipmentId, companyEdits } = req.body
+    console.log("COMPANY EDITS")
+    console.log(companyEdits)
 
-
-    if(!isCompany)
+    if(isCompany === 'false')
     {let promiseSelected = selectedItems.map((item) => {
         Items.findOne({
             where: {
@@ -271,7 +275,7 @@ exports.editShipment = (req, res) => {
         }).then((shipment) => {
             if(shipment.status !== companyEdits.status){
                 Shipments.update({
-                    lbs_weight: parseFloat(companyEdits.lbs_weight)
+                    status: companyEdits.status
                 }, {
                     where: {
                         id: shipment.dataValues.id

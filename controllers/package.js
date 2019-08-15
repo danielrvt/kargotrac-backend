@@ -18,7 +18,7 @@ exports.getPackages = (req, res) => {
     const companyID = headers.companyid
     const isCompany = headers.iscompany
 
-    if (!isCompany) {
+    if (isCompany === 'false') {
         Packages.findAll({
             where: {
                 UserId: userID,
@@ -182,7 +182,7 @@ exports.editPackage = (req, res) => {
     const companyID = headers.companyid
     const isCompany = headers.iscompany
     const { old_tracking_id, new_tracking_id, old_seller, new_seller, status } = req.body
-    if (!isCompany) {
+    if (isCompany === 'false') {
         if (old_tracking_id !== new_tracking_id && old_seller !== new_seller) {
 
             Packages.findAll({

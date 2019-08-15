@@ -276,7 +276,7 @@ exports.editUser = (req, res) => {
     const isCompany = token.iscompany
     const companyID = token.companyid
     console.log(updates)
-    if (!isCompany) {
+    if (isCompany === 'false') {
         User.findOne({ where: { id: userID } }).then(function (user) {
             if (updates.address !== user.dataValues.address) {
                 addressUpdated = true
@@ -410,7 +410,7 @@ exports.getUser = (req, res) => {
     }
     const userID = decoded.id
     const isCompany = token.iscompany
-    if(!isCompany){
+    if(isCompany === 'false'){
         console.log(userID)
         User.findOne({ where: { id: userID } }).then(function (user) {
             console.log('Este es el usuario')
