@@ -41,6 +41,11 @@ router.post(
 )
 
 router.post(
+    '/companies',
+    companyController.loginCompany
+)
+
+router.post(
     '/users',
     userController.login
 )
@@ -83,6 +88,11 @@ router.post(
 router.get(
     '/shipments',
     shipmentController.getShipments
+)
+
+router.get(
+    '/getShipment',
+    shipmentController.getSingleShipment
 )
 
 router.get(
