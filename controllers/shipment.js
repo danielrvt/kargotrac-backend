@@ -13,6 +13,7 @@ const create = async (shippingWay, companyID, userID) => {
                 shipping_way: shippingWay,
                 CompanyId: companyID,
                 UserId: userID,
+                status: "POR EMPACAR"
             }
         )
     } catch (e) {
@@ -87,8 +88,7 @@ exports.getShipments = (req, res) => {
     console.log(!isCompany)
     console.log(userID, companyID)
     if (isCompany === 'false') {
-        console.log("!!!!!!!!!!!!!!!!!!!!!1")
-        console.log("No soy company id")
+
         Shipments.findAll({
             where: {
                 UserId: userID,
@@ -218,105 +218,166 @@ exports.editShipment = (req, res) => {
     const userID = decoded.id
     const companyID = headers.companyid
     const isCompany = headers.iscompany
-    const { selectedItems, deselectedItems, ShipmentId, companyEdits } = req.body
+    const { selectedItems, deselectedItems, ShipmentId, companyEdits, newItems } = req.body
     console.log("COMPANY EDITS")
     console.log(companyEdits)
 
-    if(isCompany === 'false')
-    {let promiseSelected = selectedItems.map((item) => {
-        Items.findOne({
-            where: {
-                id: item.item_id
-            }
-        }).then((itemFound) => {
+    if (isCompany === 'false') {
+        if (selectedItems.length > 0) {
 
-            if (itemFound.dataValues.ShipmentId !== parseInt(ShipmentId)) {
-                Items.update({
-                    ShipmentId: ShipmentId
-                }, {
-                        where: {
-                            id: itemFound.dataValues.id
-                        }
+            Shipments.findOne({
+                where: {
+                    id: parseInt(ShipmentId)
+                }
+            }).then((shipment) => {
+                console.log("SHIPMENT")
+                console.log(shipment)
+                console.log('new item')
+                console.log(newItems)
+                if (shipment.dataValues.status === "EMPACADO") {
+                    console.log("pase a empadados")
+                    create(
+                        shipment.dataValues.shipping_way,
+                        shipment.CompanyId,
+                        shipment.UserId
+                    ).then((ship) => {
+                        let promiseSelected = newItems.map((item) => {
+                            Items.findOne({
+                                where: {
+                                    id: parseInt(item.item_id)
+                                }
+                            }).then((itemFound) => {
+    
+                                if (itemFound.dataValues.ShipmentId !== parseInt(ShipmentId)) {
+                                    Items.update({
+                                        ShipmentId: ship.dataValues.id
+                                    }, {
+                                            where: {
+                                                id: itemFound.dataValues.id
+                                            }
+                                        })
+                                }
+                            })
+                        })
+                        Promise.all([promiseSelected]).then(() => {
+                            res.json({
+                                status: "success",
+                                ShipmentId: ShipmentId
+                            })
+                        })
                     })
-            }
-        })
-    })
 
-    let promiseDeselected = deselectedItems.map((item) => {
 
-        Items.findOne({
-            where: {
-                id: item.item_id
-            }
-        }).then((itemFound) => {
-            if (itemFound.dataValues.ShipmentId === parseInt(ShipmentId)) {
-                Items.update({
-                    ShipmentId: null
-                }, {
-                        where: {
-                            id: itemFound.dataValues.id
-                        }
+                } else {
+                    let promiseSelected = selectedItems.map((item) => {
+                        Items.findOne({
+                            where: {
+                                id: parseInt(item.item_id)
+                            }
+                        }).then((itemFound) => {
+
+                            if (itemFound.dataValues.ShipmentId !== parseInt(ShipmentId)) {
+                                Items.update({
+                                    ShipmentId: ShipmentId
+                                }, {
+                                        where: {
+                                            id: itemFound.dataValues.id
+                                        }
+                                    })
+                            }
+
+                        })
                     })
-            }
-        })
-    })
 
-    Promise.all([promiseSelected, promiseDeselected]).then(() => {
-        res.json({
-            status: "success",
-            ShipmentId: ShipmentId
-        })
-    })}
+                    let promiseDeselected = deselectedItems.map((item) => {
+
+                        Items.findOne({
+                            where: {
+                                id: parseInt(item.item_id)
+                            }
+                        }).then((itemFound) => {
+                            if (itemFound.dataValues.ShipmentId === parseInt(ShipmentId)) {
+                                Items.update({
+                                    ShipmentId: null
+                                }, {
+                                        where: {
+                                            id: itemFound.dataValues.id
+                                        }
+                                    })
+                            }
+                        })
+                    })
+
+                    Promise.all([promiseSelected, promiseDeselected]).then(() => {
+                        res.json({
+                            status: "success",
+                            ShipmentId: ShipmentId
+                        })
+                    })
+                }
+            })
+
+
+        } else {
+            Shipments.destroy({
+                where: {
+                    id: parseInt(ShipmentId)
+                }
+            }).then(() => res.json({
+                status: "Shipment destroyed"
+            }))
+        }
+    }
     else {
         Shipments.findOne({
             where: {
                 id: parseInt(ShipmentId)
             }
         }).then((shipment) => {
-            if(shipment.status !== companyEdits.status){
+            if (shipment.status !== companyEdits.status) {
                 Shipments.update({
                     status: companyEdits.status
                 }, {
-                    where: {
-                        id: shipment.dataValues.id
-                    }
-                })
+                        where: {
+                            id: shipment.dataValues.id
+                        }
+                    })
             }
-            if(parseFloat(shipment.lbs_weight) !== parseFloat(companyEdits.lbs_weight)){
+            if (parseFloat(shipment.lbs_weight) !== parseFloat(companyEdits.lbs_weight)) {
                 Shipments.update({
                     lbs_weight: parseFloat(companyEdits.lbs_weight)
                 }, {
-                    where: {
-                        id: shipment.dataValues.id
-                    }
-                })
+                        where: {
+                            id: shipment.dataValues.id
+                        }
+                    })
             }
-            if(parseFloat(shipment.pvl_weight) !== parseFloat(companyEdits.pvl_weight)){
+            if (parseFloat(shipment.pvl_weight) !== parseFloat(companyEdits.pvl_weight)) {
                 Shipments.update({
                     pvl_weight: parseFloat(companyEdits.pvl_weight)
                 }, {
-                    where: {
-                        id: shipment.dataValues.id
-                    }
-                })
+                        where: {
+                            id: shipment.dataValues.id
+                        }
+                    })
             }
-            if(parseFloat(shipment.cubic_feet_volume) !== parseFloat(companyEdits.cubic_feet_volume)){
+            if (parseFloat(shipment.cubic_feet_volume) !== parseFloat(companyEdits.cubic_feet_volume)) {
                 Shipments.update({
                     cubic_feet_volume: parseFloat(companyEdits.cubic_feet_volume)
                 }, {
-                    where: {
-                        id: shipment.dataValues.id
-                    }
-                })
+                        where: {
+                            id: shipment.dataValues.id
+                        }
+                    })
             }
-            if(parseInt(shipment.number_of_boxes) !== parseInt(companyEdits.number_of_boxes)){
+            if (parseInt(shipment.number_of_boxes) !== parseInt(companyEdits.number_of_boxes)) {
                 Shipments.update({
                     number_of_boxes: parseInt(companyEdits.number_of_boxes)
                 }, {
-                    where: {
-                        id: shipment.dataValues.id
-                    }
-                })
+                        where: {
+                            id: shipment.dataValues.id
+                        }
+                    })
             }
             res.json({
                 status: "success",

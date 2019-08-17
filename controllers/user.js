@@ -37,12 +37,11 @@ exports.createUser = (req, res) => {
     try {
 
         const { email, username, password, companyID } = req.body
-        // Chequeo si la compania existe
+
         ckeckIfCompExist(companyID).then((exist) => {
 
             if (exist) {
 
-                // Chequeo si el email existe
                 checkifExistEmail(email).then((result) => {
 
                     const existEmail = result.exist
@@ -54,17 +53,21 @@ exports.createUser = (req, res) => {
                         if (existEmail && existUsername) {
 
                             if (user.dataValues.password === password) {
-                                // Debo chequear que la compania exista
+
                                 usersCompanyCont.createUsersCompany(user.dataValues.id, companyID).then((resp) => {
-                                    console.log(resp)
+
                                     if (!resp) res.json({ status: 'failed', msg: 'Company already associated with user. Go to login' })
                                     else {
-                                        // Debo buscar la compania que agregue para hacerle push a userscompanies
+
                                         findUsersCompanies(user.dataValues.id).then((companies) => {
-                                            console.log("Companies")
+                                            console.log("AQIO COMPANIES")
                                             console.log(companies)
+                                            const compIndex = companies.findIndex((cmp) => {
+                                                return cmp.id === parseInt(companyID)
+
+                                            })
                                             let token = jwt.sign({ id: user.dataValues.id, username: user.dataValues.username }, 'whatever it takes', { expiresIn: 129600 }); // Sigining the token
-                                            res.json({ status: 'success', user: user.dataValues, companyID: companyID, token: token, usersCompanies: companies })
+                                            res.json({ status: 'success', user: user.dataValues, company: companies[compIndex], token: token, usersCompanies: companies })
 
                                         })
                                     }
@@ -145,8 +148,16 @@ const createNewUser = async (email, username, password, companyID, response) => 
             password
         })
         usersCompanyCont.createUsersCompany(user.id, companyID).then((company) => {
-            let token = jwt.sign({ id: user.dataValues.id, username: user.dataValues.username }, 'whatever it takes', { expiresIn: 129600 }); // Sigining the token
-            response.json({ status: 'success', user: user.dataValues, companyID: companyID, token: token, usersCompanies: [company] })
+            Company.findOne({
+                where: {
+                    id: company.companyID
+                }
+            }).then((cmp) => {
+                console.log(cmp)
+                let token = jwt.sign({ id: user.dataValues.id, username: user.dataValues.username }, 'whatever it takes', { expiresIn: 129600 }); // Sigining the token
+                response.json({ status: 'success', user: user.dataValues, company: cmp.dataValues, token: token, usersCompanies: [cmp] })
+            })
+
         })
 
 
@@ -176,20 +187,31 @@ exports.login = (req, res) => {
                 if (user.dataValues.password === password) {
 
                     findUsersCompanies(user.dataValues.id).then((companies) => {
-                        console.log("!!!!!!!!!!!!!!!!!!")
-                        console.log(companies)
+
                         if (companies) {
+
                             if (companyID) {
+
                                 checkIfCompMatch(user.dataValues.id, companyID).then((match) => {
+
                                     if (match) {
+
+                                        let compIndex = companies.findIndex((cmp) => {
+                                            return cmp.id === parseInt(companyID)
+
+                                        })
                                         let token = jwt.sign({ id: user.dataValues.id, username: user.dataValues.username }, 'whatever it takes', { expiresIn: 129600 }); // Sigining the token
-                                        res.json({ status: 'success', user: user.dataValues, companyID: companyID, token: token, usersCompanies: companies })
+                                        res.json({ status: 'success', user: user.dataValues, company: companies[compIndex], token: token, usersCompanies: companies })
                                     }
+
                                     else res.json({ status: 'failed', msg: 'User is not associated to that company or the company does not exist' })
                                 })
+
                             } else {
+                                console.log("ESTAS SON LAS COMPANIAS")
+                                console.log(companies)
                                 let token = jwt.sign({ id: user.dataValues.id, username: user.dataValues.username }, 'whatever it takes', { expiresIn: 129600 }); // Sigining the token
-                                res.json({ status: 'success', user: user.dataValues, companyID: companies[0].dataValues.companyID, token: token, usersCompanies: companies })
+                                res.json({ status: 'success', user: user.dataValues, company: companies[0], token: token, usersCompanies: companies })
                             }
 
                         } else {
@@ -200,6 +222,7 @@ exports.login = (req, res) => {
 
                 }
                 else res.json({ status: 'failed', msg: 'Wrong password' })
+
             } else {
                 res.json({ status: 'failed', msg: 'User does not exist' })
             }
@@ -220,7 +243,7 @@ const checkIfCompMatch = (userID, companyID) => {
 
     return (usersCompany.findAll({
         where: {
-            userID: userID,
+            userID: parseInt(userID),
             companyID: parseInt(companyID)
         }
     })).then(function (user) {
@@ -235,7 +258,7 @@ const checkIfCompMatch = (userID, companyID) => {
 const ckeckIfCompExist = (companyID) => {
     return (Company.findAll({
         where: {
-            id: companyID
+            id: parseInt(companyID)
         }
     })).then(function (company) {
 
@@ -246,25 +269,37 @@ const ckeckIfCompExist = (companyID) => {
 
 }
 
-const findUsersCompanies = (userID) => {
-    return (usersCompany.findAll({
+const findUsersCompanies = async (userID) => {
+    let companiesInfo = []
+    return Promise.resolve(usersCompany.findAll({
         where: {
             userID: userID
         }
     })).then(function (companies) {
+        if (companies.length > 0) {
+            
+            let promiseCompany = companies.map((company) => {
+                return Company.findOne({
+                    where: {
+                        id: company.companyID
+                    }
+                }).then((companyInfo) =>
+                    companiesInfo.push(companyInfo.dataValues)
+                )
+            })
 
-        if (companies.length > 0)
-            return companies
-        else return ''
+           return  Promise.resolve(Promise.all(promiseCompany).then(() => {
+                console.log(companiesInfo)
+                return companiesInfo
+            }))
+        }
+        else return false
     })
 }
 exports.editUser = (req, res) => {
 
     const token = req.headers
     const updates = req.body
-    let addressUpdated = false;
-    let phone1Updated = false;
-    let phone2Updated = false;
 
     try {
         decoded = jwt.verify(token.usertoken, 'whatever it takes');
@@ -278,6 +313,7 @@ exports.editUser = (req, res) => {
     console.log(updates)
     if (isCompany === 'false') {
         User.findOne({ where: { id: userID } }).then(function (user) {
+
             if (updates.address !== user.dataValues.address) {
                 addressUpdated = true
                 User.update(
@@ -285,6 +321,7 @@ exports.editUser = (req, res) => {
                     { where: { id: userID } }
                 ).then(() => { console.log('address updated') })
             }
+
             if (updates.phone1 !== user.dataValues.phone1) {
                 phone1Updated = true;
                 User.update(
@@ -292,6 +329,7 @@ exports.editUser = (req, res) => {
                     { where: { id: userID } }
                 ).then(() => { console.log('phone1 updated') })
             }
+
             if (updates.phone2 !== user.dataValues.phone2) {
                 phone2Updated = true
                 User.update(
@@ -299,17 +337,14 @@ exports.editUser = (req, res) => {
                     { where: { id: userID } }
                 ).then(() => { console.log('phone2 updated') })
             }
-            //window.alert(user)
-            //return res.json(user);
-            console.log('Este es el usuario actualizado')
-            console.log(user)
+
             res.json({ status: 'success', user: user.dataValues, companyID: token.companyid, token: token.usertoken })
-            //res.json(user)
+
         }, function (e) { res.json(e) });
     } else {
         Company.findOne({
             where: {
-                id: companyID
+                id: parseInt(companyID)
             }
         }).then((company) => {
 
@@ -320,6 +355,7 @@ exports.editUser = (req, res) => {
                     { where: { id: companyID } }
                 ).then(() => { console.log('address updated') })
             }
+
             if (updates.phone1 !== company.dataValues.phone) {
                 phone1Updated = true;
                 Company.update(
@@ -327,6 +363,7 @@ exports.editUser = (req, res) => {
                     { where: { id: companyID } }
                 ).then(() => { console.log('phone1 updated') })
             }
+
             if (updates.logo !== company.dataValues.logo) {
                 phone1Updated = true;
                 Company.update(
@@ -334,6 +371,7 @@ exports.editUser = (req, res) => {
                     { where: { id: companyID } }
                 ).then(() => { console.log('phone1 updated') })
             }
+
             if (updates.primary_color !== company.dataValues.primary_color) {
                 phone1Updated = true;
                 Company.update(
@@ -341,6 +379,7 @@ exports.editUser = (req, res) => {
                     { where: { id: companyID } }
                 ).then(() => { console.log('phone1 updated') })
             }
+
             if (updates.secondary_color !== company.dataValues.secondary_color) {
                 phone1Updated = true;
                 Company.update(
@@ -348,31 +387,31 @@ exports.editUser = (req, res) => {
                     { where: { id: companyID } }
                 ).then(() => { console.log('phone1 updated') })
             }
+
             if (updates.pvl_factor && parseFloat(updates.pvl_factor) !== company.dataValues.pvl_factor) {
                 phone1Updated = true;
                 Company.update(
-                    { pvl_factor : parseFloat(updates.pvl_factor)  },
+                    { pvl_factor: parseFloat(updates.pvl_factor) },
                     { where: { id: companyID } }
                 ).then(() => { console.log('phone1 updated') })
             }
+
             if (updates.maritime_cubic_feet_price && parseFloat(updates.maritime_cubic_feet_price) !== company.dataValues.maritime_cubic_feet_price) {
                 phone1Updated = true;
                 Company.update(
-                    { maritime_cubic_feet_price : parseFloat(updates.maritime_cubic_feet_price)  },
+                    { maritime_cubic_feet_price: parseFloat(updates.maritime_cubic_feet_price) },
                     { where: { id: companyID } }
                 ).then(() => { console.log('phone1 updated') })
             }
+
             if (updates.air_pound_price && parseFloat(updates.air_pound_price) !== company.dataValues.air_pound_price) {
                 phone1Updated = true;
                 Company.update(
-                    { air_pound_price : parseFloat(updates.air_pound_price)  },
+                    { air_pound_price: parseFloat(updates.air_pound_price) },
                     { where: { id: companyID } }
                 ).then(() => { console.log('phone1 updated') })
             }
-            
 
-            console.log('Este es el usuario actualizado')
-           // console.log(user)
             res.json({ status: 'success', user: company.dataValues, companyID: token.companyid, token: token.usertoken })
 
         })
@@ -381,26 +420,12 @@ exports.editUser = (req, res) => {
 
 }
 
-const update = (updatedAtt, value, userID) => {
-    User.update(
-        { [updatedAtt]: value },
-        { where: { id: userID } }
-    )
-        .then(function (rowsUpdated) {
-            res.json(rowsUpdated)
-        }, function (e) { console.log(e) })
-
-}
 
 exports.getUser = (req, res) => {
 
     const token = req.headers
     const updates = req.body
 
-    console.log('Estos son los upt')
-    console.log(updates)
-    console.log(token.usertoken)
-    //res.json({ status: 'success', user: null, companyID: null, token: token })
 
     try {
         decoded = jwt.verify(token.usertoken, 'whatever it takes');
@@ -410,21 +435,22 @@ exports.getUser = (req, res) => {
     }
     const userID = decoded.id
     const isCompany = token.iscompany
-    if(isCompany === 'false'){
+
+    if (isCompany === 'false') {
         console.log(userID)
         User.findOne({ where: { id: userID } }).then(function (user) {
             console.log('Este es el usuario')
             console.log(user)
             res.json({ status: 'success', user: user.dataValues, companyID: token.companyid, token: token.usertoken })
         });
-    
-    }else{
+
+    } else {
         Company.findOne({
             where: {
                 id: token.companyid
             }
         }).then((company) => {
-            res.json({ status: 'success', user: company.dataValues ,token: token.usertoken })
+            res.json({ status: 'success', user: company.dataValues, token: token.usertoken })
         })
     }
 

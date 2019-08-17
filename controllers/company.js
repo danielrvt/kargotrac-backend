@@ -42,3 +42,16 @@ exports.loginCompany = (req, res) => {
         }else res.json({ status: 'failed', msg: "Wrong password"})
     })
 }
+
+exports.getCompany = (id) => {
+
+    Company.findOne({
+        where: {
+            id: parseInt(id)
+        }
+    }).then((company) => {
+
+        if(company) return company.dataValues
+        else return false
+    })
+}
