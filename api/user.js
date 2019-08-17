@@ -2,6 +2,8 @@
 const userController = require('../controllers/user')
 const itemController = require('../controllers/item')
 const companyController = require('../controllers/company')
+const shipmentController = require('../controllers/shipment')
+const packageController = require('../controllers/package')
 const express = require('express')
 const router = express.Router()
 const { body } = require('express-validator/check')
@@ -39,6 +41,11 @@ router.post(
 )
 
 router.post(
+    '/companies',
+    companyController.loginCompany
+)
+
+router.post(
     '/users',
     userController.login
 )
@@ -71,6 +78,41 @@ router.patch(
 router.delete(
     '/items',
     itemController.deleteItems
+)
+
+router.post(
+    '/shipments',
+    shipmentController.createShipments
+)
+
+router.get(
+    '/shipments',
+    shipmentController.getShipments
+)
+
+router.get(
+    '/getShipment',
+    shipmentController.getSingleShipment
+)
+
+router.get(
+    '/packages',
+    packageController.getPackages
+)
+
+router.patch(
+    '/shipments/edit',
+    shipmentController.editShipment
+)
+
+router.get(
+    '/packages/items',
+    itemController.getPackageItems
+)
+
+router.patch(
+    '/packages/edit',
+    packageController.editPackage
 )
 //enable pre-flight
 router.options("*", cors(options));

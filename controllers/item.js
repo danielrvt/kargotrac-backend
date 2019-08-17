@@ -42,50 +42,47 @@ exports.createItem = (req, res) => {
         return res.status(401).send('unauthorized');
     }
     const userID = decoded.id
-
-    Packages.findOrCreate({
-        where: {
-            tracking_id: tracking_id
-        },
-        defaults: {
+    Packages.create(
+        {
             tracking_id: tracking_id,
             UserId: userID,
             CompanyId: headers.companyid,
-            status: 'new'
+            status: 'PENDIENTE'
         }
-    }).then((package) => {
+    ).then((package) => {
 
-        // Pack asociado a compania
+            // Pack asociado a compania
 
-        //package[0].setCompany(companyID)
+            //package[0].setCompany(companyID)
+            console.log(`PAQUETE: `)
+            console.log(package)
+            // Creo el item
+            create(
+                name,
+                parseInt(quantity),
+                package.dataValues.id
+            ).then((item) => {
+                // Seteo las relaciones
 
-        // Creo el item
-        create(
-            name,
-            parseInt(quantity),
-            package[0].dataValues.id
-        ).then((item) => {
-            // Seteo las relaciones
+                // Relacion articulos estan en paquetes
+                //item.setPackages(package[0])
+                const response = {
+                    tracking_id: tracking_id,
+                    status: package.dataValues.status,
+                    name: name,
+                    qty: quantity,
+                    item_id: item.dataValues.id,
+                    package_id: package.dataValues.id
 
-            // Relacion articulos estan en paquetes
-            //item.setPackages(package[0])
-            const response = {
-                tracking_id: tracking_id,
-                status: package[0].dataValues.status,
-                name: name,
-                qty: quantity,
-                item_id: item.dataValues.id,
-                package_id: package[0].dataValues.id
-
-            }
-            console.log(response)
-            res.json(response)
+                }
+                console.log(response)
+                res.json(response)
 
 
+
+            })
 
         })
-
-    })
 
 }
 
@@ -105,23 +102,21 @@ exports.getItems = (req, res) => {
     console.log(headers)
     const userID = decoded.id
     const companyID = headers.companyid
+    const isCompany = headers.iscompany
+    console.log("IS COMPANY")
+    console.log(isCompany)
+    console.log(companyID)
     console.log('*****este es el usuariooooooo')
     console.log(userID)
-
-    Packages.findAll({
+    if(isCompany === 'false')
+    {Packages.findAll({
         where: {
             UserId: userID,
             CompanyId: parseInt(companyID)
         }
     }).then((packages) => {
-        //console.log(packages)
-        console.log("Estos son los paquetes")
-        console.log(packages)
         findItems(packages).then((result) => {
-            console.log("Este es el resultado")
-            console.log(result)
             for (let index = 0; index < result.length; index++) {
-                // Hacer con map
                 if (result[index]) {
                     for (let j = 0; j < result[index].length; j++) {
                         let item = {
@@ -130,7 +125,8 @@ exports.getItems = (req, res) => {
                             name: result[index][j].dataValues.name,
                             qty: result[index][j].dataValues.quantity,
                             item_id: result[index][j].dataValues.id,
-                            package_id: packages[index].dataValues.id
+                            package_id: packages[index].dataValues.id,
+                            ShipmentId: result[index][j].ShipmentId
                         }
                         items.push(item)
 
@@ -147,9 +143,105 @@ exports.getItems = (req, res) => {
 
 
 
-    })
+    })}
+    else {
+        Packages.findAll({
+            where: {
+                CompanyId: parseInt(companyID)
+            }
+        }).then((packages) => {
+            findItems(packages).then((result) => {
+                for (let index = 0; index < result.length; index++) {
+                    if (result[index]) {
+                        for (let j = 0; j < result[index].length; j++) {
+                            let item = {
+                                tracking_id: packages[index].dataValues.tracking_id,
+                                status: packages[index].dataValues.status,
+                                name: result[index][j].dataValues.name,
+                                qty: result[index][j].dataValues.quantity,
+                                item_id: result[index][j].dataValues.id,
+                                package_id: packages[index].dataValues.id,
+                                ShipmentId: result[index][j].ShipmentId
+                            }
+                            items.push(item)
+    
+    
+                        }
+    
+                    }
+    
+                }
+                console.log("ITEMS")
+                console.log(items)
+                res.json(items)
+            })
+    
+    
+    
+        })
+    }
 
 }
+
+exports.getPackageItems = (req, res) => {
+
+
+    headers = req.headers
+    //var items = []
+    // Chequeo autorizacion
+
+    try {
+        decoded = jwt.verify(headers.usertoken, 'whatever it takes');
+        console.log(decoded)
+    } catch (e) {
+        return res.status(401).send('unauthorized');
+    }
+
+    const userID = decoded.id
+    const companyID = headers.companyid
+    const tracking_id = headers.trackingid
+    console.log(req.data)
+    Packages.findOne({
+        where: {
+            tracking_id: tracking_id
+        }
+    }).then((package) => {
+        let pck = [package]
+        let packageItems = []
+        findItems(pck).then((result) => {
+            console.log("Result")
+            console.log(result[0])
+            let items = result[0]
+            items.map((item) => {
+                console.log(item)
+                const itemToAdd = {
+                    tracking_id: package.dataValues.tracking_id,
+                    status: package.dataValues.status,
+                    name: item.dataValues.name,
+                    qty: item.dataValues.quantity,
+                    item_id: item.dataValues.id,
+                    package_id: package.dataValues.id,
+                    ShipmentId: item.dataValues.ShipmentId
+                }
+                packageItems.push(itemToAdd)
+                
+            })
+
+            console.log("AQUI LOS ART")
+            console.log(packageItems)
+            const response = {
+                status: "success",
+                package: package.dataValues,
+                items: packageItems
+            }
+            res.json(response)
+        })
+
+
+
+    })
+}
+
 
 // Creo que funciona
 // Cuando le doy a agregar debe cerrar el modal

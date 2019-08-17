@@ -16,5 +16,5 @@ db.sequelize.sync().then(() => {
     console.log("ACK")
 })
 
-app.listen(process.env.PORT || 5000, () => console.log("App listening on port 8080!"))
+app.listen(process.env.PORT || 8080, () => console.log("App listening on port 8080!"))
 
